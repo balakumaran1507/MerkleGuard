@@ -1,0 +1,85 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg-primary: #0a0e1a;
+  --color-bg-surface: #111827;
+  --color-bg-surface-alt: #1a2236;
+  --color-border-default: #1e293b;
+  --color-border-light: #2a3a52;
+  --color-text-primary: #e2e8f0;
+  --color-text-muted: #64748b;
+  --color-text-dim: #475569;
+  --color-accent-cyan: #06b6d4;
+  --color-accent-cyan-dim: #0e7490;
+  --color-mg-green: #10b981;
+  --color-mg-green-dim: #065f46;
+  --color-mg-amber: #f59e0b;
+  --color-mg-amber-dim: #78350f;
+  --color-mg-red: #ef4444;
+  --color-mg-red-dim: #7f1d1d;
+  --color-mg-purple: #8b5cf6;
+
+  --font-sans: "DM Sans", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", Menlo, monospace;
+}
+
+@layer base {
+  body {
+    @apply bg-bg-primary text-text-primary font-sans;
+  }
+}
+
+@layer components {
+  .mg-card {
+    @apply bg-bg-surface border border-border-default rounded-xl shadow-sm transition-all duration-200;
+  }
+  .mg-card-hover {
+    @apply hover:border-border-light hover:shadow-lg;
+  }
+  .mg-pill {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border;
+  }
+  .mg-btn-primary {
+    @apply bg-accent-cyan hover:bg-accent-cyan-dim text-bg-primary px-4 py-2 rounded-lg font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .mg-btn-secondary {
+    @apply bg-bg-surface-alt hover:bg-border-default border border-border-default text-text-primary px-4 py-2 rounded-lg font-medium transition-all duration-200;
+  }
+}
+
+@keyframes mg-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+@keyframes mg-fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes mg-sweep {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(400%); }
+}
+
+@keyframes mg-typewriter {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+.animate-mg-pulse { animation: mg-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+.animate-mg-fadeIn { animation: mg-fadeIn 400ms ease-out forwards; }
+.animate-mg-sweep { animation: mg-sweep 2s linear infinite; }
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  @apply bg-bg-primary;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-border-default rounded-full;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  @apply bg-border-light;
+}
