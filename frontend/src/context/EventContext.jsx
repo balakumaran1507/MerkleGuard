@@ -12,9 +12,10 @@ export function EventProvider({ children }) {
   const refreshNodes = async () => {
     try {
       const result = await client.get("/api/nodes")
-      const nodesList = result.nodes || []
+      // API returns a plain array directly
+      const nodesList = Array.isArray(result) ? result : (result.nodes || [])
       setNodes(nodesList)
-      
+
       const statusMap = {}
       nodesList.forEach(node => {
         statusMap[node.id] = node.status
@@ -35,15 +36,22 @@ export function EventProvider({ children }) {
   }
 
   const { isConnected, lastEvent, events } = useWebSocket((msg) => {
-    if (msg.type === "drift" || msg.type === "reconcile" || msg.type === "resolve" || msg.type === "alert") {
-       refreshStats()
-       refreshNodes()
+    // Refresh on any meaningful event type from the engine
+    const refreshTriggers = [
+      "drift", "reconcile", "resolve", "alert",
+      "drift_detected", "auto_remediate", "escalate_alert",
+      "flag_for_review", "attack_injected", "manual_reconcile",
+      "snapshot_round", "consensus_round"
+    ]
+    if (refreshTriggers.includes(msg.type)) {
+      refreshStats()
+      refreshNodes()
     }
-    if (msg.node && msg.type === "drift") {
-      setNodeStatuses(prev => ({ ...prev, [msg.node]: "drifted" }))
+    if (msg.node_id && msg.type === "drift_detected") {
+      setNodeStatuses(prev => ({ ...prev, [msg.node_id]: "drifted" }))
     }
-    if (msg.node && (msg.type === "reconcile" || msg.type === "resolve")) {
-      setNodeStatuses(prev => ({ ...prev, [msg.node]: "compliant" }))
+    if (msg.node_id && msg.type === "auto_remediate") {
+      setNodeStatuses(prev => ({ ...prev, [msg.node_id]: "compliant" }))
     }
   })
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react"
-import { Play, RotateCcw, ShieldCheck, ShieldAlert } from "lucide-react"
+import { RotateCcw, PlayCircle, ShieldCheck, ShieldX, Bell } from "lucide-react"
 import { ConnectionStatus } from "./ConnectionStatus"
 import { client } from "../api/client"
 import { clsx } from "clsx"
@@ -35,48 +35,132 @@ export function Header() {
     }
   }
 
+  const isOk = baselineStatus?.valid
+
   return (
-    <header className="h-16 border-b border-border-default bg-bg-surface flex items-center justify-between px-8 sticky top-0 z-50">
-      <div className="flex items-center gap-6">
-        <div className="flex flex-col">
-          <span className="text-[10px] font-bold text-text-muted uppercase tracking-widest">Platform Integrity</span>
+    <header
+      className="flex items-center justify-between px-6 h-14 flex-shrink-0"
+      style={{
+        background: "var(--color-bg-glass)",
+        backdropFilter: "blur(12px)",
+        borderBottom: "1px solid var(--color-border-default)",
+        position: "sticky",
+        top: 0,
+        zIndex: 50,
+      }}
+    >
+      {/* Left cluster */}
+      <div className="flex items-center gap-5">
+        {/* Live connection */}
+        <div className="flex flex-col gap-0.5">
+          <span
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: "9px",
+              fontWeight: 600,
+              color: "var(--color-text-dim)",
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+            }}
+          >
+            Stream
+          </span>
           <ConnectionStatus />
         </div>
-        
-        <div className="w-px h-8 bg-border-default" />
-        
-        <div className="flex flex-col">
-          <span className="text-[10px] font-bold text-text-muted uppercase tracking-widest">Baseline Authority</span>
-          <div className="flex items-center gap-2">
-             {baselineStatus?.valid ? (
-               <ShieldCheck size={12} className="text-mg-green" />
-             ) : (
-               <ShieldAlert size={12} className="text-mg-red" />
-             )}
-             <span className={clsx("text-[10px] font-mono font-bold tracking-widest", baselineStatus?.valid ? "text-mg-green" : "text-mg-red")}>
-               {baselineStatus?.valid ? "CRYPTOGRAPHICALLY VERIFIED" : "TAMPER DETECTED"}
-             </span>
+
+        {/* Divider */}
+        <div style={{ width: 1, height: 28, background: "var(--color-border-default)" }} />
+
+        {/* Baseline authority */}
+        <div className="flex flex-col gap-0.5">
+          <span
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: "9px",
+              fontWeight: 600,
+              color: "var(--color-text-dim)",
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+            }}
+          >
+            Baseline
+          </span>
+          <div className="flex items-center gap-1.5">
+            {isOk ? (
+              <ShieldCheck size={12} strokeWidth={2} style={{ color: "var(--color-status-ok)" }} />
+            ) : (
+              <ShieldX size={12} strokeWidth={2} style={{ color: "var(--color-status-crit)" }} />
+            )}
+            <span
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: "10px",
+                fontWeight: 700,
+                letterSpacing: "0.06em",
+                color: isOk ? "var(--color-status-ok)" : "var(--color-status-crit)",
+              }}
+            >
+              {isOk ? "VERIFIED" : "TAMPER DETECTED"}
+            </span>
           </div>
         </div>
 
-        <div className="w-px h-8 bg-border-default" />
+        {/* Divider */}
+        <div style={{ width: 1, height: 28, background: "var(--color-border-default)" }} />
 
-        <div className="flex flex-col">
-          <span className="text-[10px] font-bold text-text-muted uppercase tracking-widest">Policy Version</span>
-          <span className="text-xs font-mono text-text-primary">v1.0.4-SIGNED</span>
+        {/* Policy version */}
+        <div className="flex flex-col gap-0.5">
+          <span
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: "9px",
+              fontWeight: 600,
+              color: "var(--color-text-dim)",
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+            }}
+          >
+            Policy
+          </span>
+          <span
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: "10px",
+              fontWeight: 600,
+              color: "var(--color-text-secondary)",
+            }}
+          >
+            v1.0.4-signed
+          </span>
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
-        <button 
+      {/* Right cluster */}
+      <div className="flex items-center gap-2">
+        {/* Ghost notify placeholder */}
+        <button className="mg-btn-ghost" style={{ padding: "6px" }}>
+          <Bell size={14} strokeWidth={1.75} />
+        </button>
+
+        {/* Reconcile */}
+        <button
           onClick={handleReconcile}
           disabled={reconciling}
-          className="mg-btn-primary flex items-center gap-2 relative overflow-hidden group"
+          className="mg-btn-primary relative overflow-hidden"
         >
-          {reconciling ? <RotateCcw size={16} className="animate-spin" /> : <Play size={16} />}
-          <span className="text-xs">Run Global Reconciliation</span>
+          {reconciling ? (
+            <RotateCcw size={13} strokeWidth={2} className="animate-mg-spin" />
+          ) : (
+            <PlayCircle size={13} strokeWidth={2} />
+          )}
+          <span>
+            {reconciling ? "Reconciling…" : "Run Reconciliation"}
+          </span>
           {reconciling && (
-            <div className="absolute inset-0 bg-white/10 animate-mg-sweep" />
+            <div
+              className="absolute inset-0 animate-mg-sweep"
+              style={{ background: "rgba(255,255,255,0.08)" }}
+            />
           )}
         </button>
       </div>

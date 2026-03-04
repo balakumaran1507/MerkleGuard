@@ -10,11 +10,16 @@ export function useWebSocket(onMessage) {
   const ws = useRef(null)
   const reconnectDelay = useRef(RECONNECT_DELAY)
   const reconnectTimer = useRef(null)
+  const onMessageRef = useRef(onMessage)
+
+  useEffect(() => {
+    onMessageRef.current = onMessage
+  }, [onMessage])
 
   const connect = useCallback(() => {
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:"
     const host = window.location.host
-    const wsUrl = `${protocol}//${host}/ws/events`
+    const wsUrl = `${protocol}//${host}/api/ws/events`
 
     ws.current = new WebSocket(wsUrl)
 
@@ -29,7 +34,7 @@ export function useWebSocket(onMessage) {
         const data = JSON.parse(event.data)
         setLastEvent(data)
         setEvents((prev) => [data, ...prev].slice(0, 100))
-        if (onMessage) onMessage(data)
+        if (onMessageRef.current) onMessageRef.current(data)
       } catch (err) {
         console.error("WebSocket message parse error", err)
       }
@@ -39,7 +44,7 @@ export function useWebSocket(onMessage) {
       console.log("WebSocket disconnected")
       setIsConnected(false)
       ws.current = null
-      
+
       reconnectTimer.current = setTimeout(() => {
         reconnectDelay.current = Math.min(reconnectDelay.current * 2, MAX_RECONNECT_DELAY)
         connect()
@@ -50,7 +55,7 @@ export function useWebSocket(onMessage) {
       console.error("WebSocket error", err)
       ws.current.close()
     }
-  }, [onMessage])
+  }, [])
 
   useEffect(() => {
     connect()

@@ -1,49 +1,79 @@
 import React from "react"
-import { Check, X, Shield, Lock, Users, Network, FileText, Database } from "lucide-react"
-import { clsx } from "clsx"
+import { Check, X, ShieldCheck, Users, Lock, Wifi, Database, FileText } from "lucide-react"
 
 const CATEGORIES = {
-  firewall_rules: { label: "Firewall Rules", icon: Shield },
+  firewall_rules: { label: "Firewall Rules", icon: ShieldCheck },
   acl: { label: "Access Control", icon: Users },
   encryption: { label: "Encryption", icon: Lock },
-  network_segmentation: { label: "Network Seg.", icon: Network },
+  network_segmentation: { label: "Network Seg.", icon: Wifi },
   auth_protocols: { label: "Authentication", icon: Database },
   audit_logging: { label: "Audit Logging", icon: FileText },
 }
 
-export function PolicyCompare({ policies }) {
+export function PolicyCompare({ policies, driftedCategories = [] }) {
   if (!policies) return null
 
   return (
-    <div className="flex flex-col gap-2">
+    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
       {Object.entries(CATEGORIES).map(([key, config]) => {
         const policy = policies[key]
         const Icon = config.icon
-        const isCompliant = !policy?.drifted
+        const isDrifted = driftedCategories.includes(key)
+        const isOk = !isDrifted && !!policy?.config_hash
 
         return (
-          <div key={key} className="flex items-center gap-4 p-3 rounded-lg bg-bg-surface-alt border border-border-default hover:border-border-light transition-colors">
-            <div className={clsx("p-2 rounded-lg", isCompliant ? "bg-mg-green/10 text-mg-green" : "bg-mg-red/10 text-mg-red")}>
-               <Icon size={16} />
-            </div>
-            
-            <div className="flex-1 min-w-0">
-               <div className="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-1">{config.label}</div>
-               <div className="flex items-center gap-3">
-                  <div className="flex flex-col flex-1 min-w-0">
-                     <span className="text-[9px] text-text-dim uppercase font-bold tracking-tighter">Current Snapshot</span>
-                     <span className="text-xs font-mono text-text-primary truncate">{policy?.config_hash || "0x00000000..."}</span>
-                  </div>
-                  <div className="w-px h-6 bg-border-default" />
-                  <div className="flex flex-col flex-1 min-w-0 opacity-50">
-                     <span className="text-[9px] text-text-dim uppercase font-bold tracking-tighter">Expected Baseline</span>
-                     <span className="text-xs font-mono text-text-muted truncate">Verified Policy v1.0</span>
-                  </div>
-               </div>
+          <div
+            key={key}
+            style={{
+              display: "flex", alignItems: "center", gap: "12px",
+              padding: "10px 14px", borderRadius: "7px",
+              background: isOk ? "var(--color-bg-elevated)" : "var(--color-status-crit-dim)",
+              border: `1px solid ${isOk ? "var(--color-border-default)" : "rgba(240,75,75,0.2)"}`,
+              transition: "border-color 0.15s",
+            }}
+          >
+            {/* Icon */}
+            <div
+              style={{
+                width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center",
+                borderRadius: "7px", flexShrink: 0,
+                background: isOk ? "var(--color-status-ok-dim)" : "var(--color-status-crit-dim)",
+                border: isOk ? "1px solid rgba(16,212,140,0.2)" : "1px solid rgba(240,75,75,0.2)",
+                color: isOk ? "var(--color-status-ok)" : "var(--color-status-crit)",
+              }}
+            >
+              <Icon size={13} strokeWidth={1.75} />
             </div>
 
-            <div className={clsx("p-1.5 rounded-full border", isCompliant ? "border-mg-green-dim text-mg-green" : "border-mg-red-dim text-mg-red")}>
-               {isCompliant ? <Check size={14} /> : <X size={14} />}
+            {/* Label + hash */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div
+                style={{ fontFamily: "var(--font-mono)", fontSize: "9px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--color-text-muted)", marginBottom: "3px" }}
+              >
+                {config.label}
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--color-text-secondary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "150px" }}>
+                  {policy?.config_hash ? policy.config_hash.substring(0, 18) + "…" : "0x000000…"}
+                </span>
+                <div style={{ width: 1, height: 14, background: "var(--color-border-default)", flexShrink: 0 }} />
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--color-text-muted)", flexShrink: 0 }}>
+                  {policy?.rule_count ?? "—"} rules
+                </span>
+              </div>
+            </div>
+
+            {/* Status icon */}
+            <div
+              style={{
+                width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center",
+                borderRadius: "50%", flexShrink: 0,
+                background: isOk ? "var(--color-status-ok-dim)" : "var(--color-status-crit-dim)",
+                border: isOk ? "1px solid rgba(16,212,140,0.3)" : "1px solid rgba(240,75,75,0.3)",
+                color: isOk ? "var(--color-status-ok)" : "var(--color-status-crit)",
+              }}
+            >
+              {isOk ? <Check size={12} strokeWidth={2.5} /> : <X size={12} strokeWidth={2.5} />}
             </div>
           </div>
         )

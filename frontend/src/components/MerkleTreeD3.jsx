@@ -25,7 +25,7 @@ export function MerkleTreeD3({ treeData, driftIndices = [], onNodeClick }) {
     const buildHierarchy = (levelIdx, nodeIdx) => {
       const hash = levels[levelIdx][nodeIdx]
       const node = { hash, level: levelIdx, index: nodeIdx }
-      
+
       if (levelIdx > 0) {
         node.children = [
           buildHierarchy(levelIdx - 1, nodeIdx * 2),
@@ -58,7 +58,7 @@ export function MerkleTreeD3({ treeData, driftIndices = [], onNodeClick }) {
       .attr("class", "link")
       .attr("d", d3.linkVertical().x(d => d.x).y(d => d.y))
       .attr("fill", "none")
-      .attr("stroke", d => isOnDriftPath(d.target) ? "#78350f" : "#1e293b")
+      .attr("stroke", d => isOnDriftPath(d.target) ? "rgba(245,158,11,0.5)" : "rgba(255,255,255,0.06)")
       .attr("stroke-width", d => isOnDriftPath(d.target) ? 2 : 1)
       .attr("opacity", 0)
       .transition()
@@ -83,14 +83,14 @@ export function MerkleTreeD3({ treeData, driftIndices = [], onNodeClick }) {
       .attr("y", -11)
       .attr("rx", 4)
       .attr("fill", d => {
-        if (isDriftSource(d)) return "#7f1d1d"
-        if (isOnDriftPath(d)) return "#78350f"
-        return "#1a2236"
+        if (isDriftSource(d)) return "rgba(240,75,75,0.15)"
+        if (isOnDriftPath(d)) return "rgba(245,158,11,0.1)"
+        return "#111827"
       })
       .attr("stroke", d => {
-        if (isDriftSource(d)) return "#ef4444"
-        if (isOnDriftPath(d)) return "#f59e0b"
-        return "#2a3a52"
+        if (isDriftSource(d)) return "rgba(240,75,75,0.7)"
+        if (isOnDriftPath(d)) return "rgba(245,158,11,0.5)"
+        return "rgba(255,255,255,0.08)"
       })
       .attr("stroke-width", d => isDriftSource(d) ? 2 : 1)
       .attr("opacity", 0)
@@ -102,12 +102,12 @@ export function MerkleTreeD3({ treeData, driftIndices = [], onNodeClick }) {
     node.append("text")
       .attr("dy", ".35em")
       .attr("text-anchor", "middle")
-      .attr("font-family", "JetBrains Mono")
+      .attr("font-family", "'Geist Mono', 'JetBrains Mono', monospace")
       .attr("font-size", "9px")
       .attr("fill", d => {
-        if (isDriftSource(d)) return "#ef4444"
+        if (isDriftSource(d)) return "#f04b4b"
         if (isOnDriftPath(d)) return "#f59e0b"
-        return "#94a3b8"
+        return "rgba(139,152,184,0.9)"
       })
       .text(d => d.data.hash.substring(0, 8))
       .attr("opacity", 0)
@@ -121,10 +121,10 @@ export function MerkleTreeD3({ treeData, driftIndices = [], onNodeClick }) {
       .attr("x", root.x)
       .attr("y", root.y - 25)
       .attr("text-anchor", "middle")
-      .attr("font-family", "JetBrains Mono")
+      .attr("font-family", "'Geist Mono', 'JetBrains Mono', monospace")
       .attr("font-size", "10px")
-      .attr("font-weight", "bold")
-      .attr("fill", "#06b6d4")
+      .attr("font-weight", "700")
+      .attr("fill", "#00d2ff")
       .text("ROOT")
       .attr("opacity", 0)
       .transition()
@@ -134,7 +134,7 @@ export function MerkleTreeD3({ treeData, driftIndices = [], onNodeClick }) {
   }, [treeData, driftIndices, onNodeClick])
 
   return (
-    <div className="w-full flex justify-center bg-bg-primary/30 rounded-xl overflow-hidden p-4">
+    <div style={{ width: "100%", display: "flex", justifyContent: "center", background: "var(--color-bg-void)", borderRadius: "8px", overflow: "hidden", padding: "16px" }}>
       <svg ref={svgRef} width="100%" height="400" preserveAspectRatio="xMidYMid meet"></svg>
     </div>
   )

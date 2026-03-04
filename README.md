@@ -24,17 +24,30 @@ These are hashed into a Merkle Tree. If even a single bit of policy drifts (due 
 - Python 3.9+
 - Node.js 18+
 
-### 1. Backend Setup
+### Quick Start (Recommended)
+You can launch both the frontend and backend servers simultaneously using the provided script:
 ```bash
-cd merkleguard/backend
+chmod +x start.sh
+./start.sh
+```
+The dashboard will be available at `http://localhost:5173`.
+
+---
+
+### Manual Setup
+
+#### 1. Backend Setup
+```bash
+cd backend
 pip install -r requirements.txt
+source venv/bin/activate # if using virtual environment
 python main.py
 ```
-The API will run on `http://localhost:8000`.
+The API will run on `http://localhost:8001`.
 
-### 2. Frontend Setup
+#### 2. Frontend Setup
 ```bash
-cd merkleguard/frontend
+cd frontend
 npm install
 npm run dev
 ```

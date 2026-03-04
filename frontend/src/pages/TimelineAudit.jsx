@@ -2,128 +2,156 @@ import React, { useState } from "react"
 import { useApi } from "../hooks/useApi"
 import { useEvents } from "../context/EventContext"
 import { TimelineItem } from "../components/TimelineItem"
-import { clsx } from "clsx"
-import { Search, Filter, Download } from "lucide-react"
+import { Search, Download, Filter } from "lucide-react"
+
+const monoLabel = { fontFamily: "var(--font-mono)", fontSize: "9.5px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--color-text-muted)" }
 
 export function TimelineAudit() {
-  const { events: liveEvents, isConnected } = useEvents()
-  const { data: auditData } = useApi("/api/audit-log")
-  const [activeTab, setActiveTab] = useState("live")
+   const { events: liveEvents, isConnected } = useEvents()
+   const { data: auditData } = useApi("/api/audit-log")
+   const [activeTab, setActiveTab] = useState("live")
 
-  const auditEntries = auditData?.entries || []
+   const auditEntries = Array.isArray(auditData) ? auditData : (auditData?.entries || [])
 
-  return (
-    <div className="flex flex-col gap-6">
-      <div className="flex justify-between items-end">
-        <div>
-          <h1 className="text-2xl font-bold text-text-primary tracking-tight">Timeline & Forensic Audit</h1>
-          <p className="text-xs text-text-muted font-bold uppercase tracking-widest mt-1">Immutable Log of Merkle Proofs and Reconciliation Actions</p>
-        </div>
-        
-        <div className="flex items-center gap-2">
-           <div className={clsx("w-2 h-2 rounded-full animate-mg-pulse", isConnected ? "bg-mg-green" : "bg-mg-red")} />
-           <span className={clsx("text-xs font-mono font-bold uppercase tracking-widest", isConnected ? "text-mg-green" : "text-mg-red")}>
-             {isConnected ? "Live Feed Active" : "Stream Disconnected"}
-           </span>
-        </div>
+   return (
+      <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+
+         {/* Heading */}
+         <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
+            <div>
+               <h1 style={{ fontFamily: "var(--font-sans)", fontSize: "22px", fontWeight: 700, color: "var(--color-text-primary)", letterSpacing: "-0.03em", lineHeight: 1, marginBottom: "6px" }}>
+                  Timeline & Forensic Audit
+               </h1>
+               <p style={{ ...monoLabel }}>Immutable log of Merkle proofs and reconciliation actions</p>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+               <span
+                  className={isConnected ? "animate-mg-pulse" : ""}
+                  style={{ display: "block", width: "6px", height: "6px", borderRadius: "50%", background: isConnected ? "var(--color-status-ok)" : "var(--color-status-crit)", flexShrink: 0 }}
+               />
+               <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px", fontWeight: 700, letterSpacing: "0.06em", color: isConnected ? "var(--color-status-ok)" : "var(--color-status-crit)" }}>
+                  {isConnected ? "LIVE" : "DISCONNECTED"}
+               </span>
+            </div>
+         </div>
+
+         {/* Tabs */}
+         <div style={{ display: "flex", gap: "0", borderBottom: "1px solid var(--color-border-default)" }}>
+            {[
+               { id: "live", label: "Live Events" },
+               { id: "audit", label: "Audit Log" },
+            ].map(tab => (
+               <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  style={{
+                     position: "relative", padding: "10px 20px", cursor: "pointer",
+                     fontFamily: "var(--font-mono)", fontSize: "10px", fontWeight: 700,
+                     letterSpacing: "0.08em", textTransform: "uppercase",
+                     background: "none", border: "none",
+                     color: activeTab === tab.id ? "var(--color-cyan-500)" : "var(--color-text-muted)",
+                     transition: "color 0.15s",
+                  }}
+               >
+                  {tab.label}
+                  {activeTab === tab.id && (
+                     <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "2px", background: "var(--color-cyan-500)", boxShadow: "0 0 8px rgba(0,210,255,0.5)" }} />
+                  )}
+               </button>
+            ))}
+         </div>
+
+         {activeTab === "live" ? (
+            <div className="mg-card animate-mg-fadeIn" style={{ overflow: "hidden" }}>
+               <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--color-border-default)", display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--color-bg-elevated)" }}>
+                  <span style={{ ...monoLabel }}>Recent Activity · Last 100</span>
+                  <div style={{ display: "flex", gap: "4px" }}>
+                     <button className="mg-btn-ghost" style={{ padding: "5px 8px" }}><Filter size={13} /></button>
+                     <button className="mg-btn-ghost" style={{ padding: "5px 8px" }}><Download size={13} /></button>
+                  </div>
+               </div>
+               <div style={{ display: "flex", flexDirection: "column" }}>
+                  {liveEvents.length > 0
+                     ? liveEvents.map((ev, i) => <TimelineItem key={i} event={ev} />)
+                     : (
+                        <div style={{ padding: "60px 0", display: "flex", alignItems: "center", justifyContent: "center", opacity: 0.3 }}>
+                           <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--color-text-dim)" }}>
+                              Awaiting consensus events…
+                           </span>
+                        </div>
+                     )
+                  }
+               </div>
+            </div>
+         ) : (
+            <div className="mg-card animate-mg-fadeIn" style={{ overflow: "hidden" }}>
+               {/* Audit toolbar */}
+               <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--color-border-default)", display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--color-bg-elevated)" }}>
+                  <div style={{ position: "relative" }}>
+                     <Search size={12} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "var(--color-text-muted)" }} />
+                     <input
+                        type="text"
+                        placeholder="Search node ID or root hash…"
+                        style={{
+                           background: "var(--color-bg-surface)", border: "1px solid var(--color-border-default)",
+                           borderRadius: "6px", padding: "7px 12px 7px 30px", fontSize: "11px",
+                           fontFamily: "var(--font-sans)", color: "var(--color-text-primary)", outline: "none", width: "240px",
+                        }}
+                        onFocus={e => e.target.style.borderColor = "var(--color-cyan-500)"}
+                        onBlur={e => e.target.style.borderColor = "var(--color-border-default)"}
+                     />
+                  </div>
+                  <button className="mg-btn-secondary" style={{ fontSize: "11px", gap: "6px" }}>
+                     <Download size={12} />Export CSV
+                  </button>
+               </div>
+
+               {/* Table */}
+               <div style={{ overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                     <thead>
+                        <tr style={{ background: "var(--color-bg-elevated)", borderBottom: "1px solid var(--color-border-default)" }}>
+                           {["Timestamp", "Event Type", "Node ID", "Before Root", "After Root", "Details"].map(th => (
+                              <th key={th} style={{ padding: "10px 16px", textAlign: "left", fontFamily: "var(--font-mono)", fontSize: "9px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--color-text-muted)", whiteSpace: "nowrap" }}>
+                                 {th}
+                              </th>
+                           ))}
+                        </tr>
+                     </thead>
+                     <tbody>
+                        {auditEntries.map(entry => (
+                           <tr
+                              key={entry.id}
+                              style={{ borderBottom: "1px solid var(--color-border-subtle)", transition: "background 0.1s" }}
+                              onMouseEnter={e => e.currentTarget.style.background = "var(--color-bg-elevated)"}
+                              onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                           >
+                              <td style={{ padding: "10px 16px", fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--color-text-dim)", whiteSpace: "nowrap" }}>
+                                 {new Date(entry.created_at).toLocaleString()}
+                              </td>
+                              <td style={{ padding: "10px 16px" }}>
+                                 <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", fontWeight: 700, letterSpacing: "0.08em", padding: "2px 7px", borderRadius: "4px", background: "var(--color-bg-elevated)", border: "1px solid var(--color-border-default)", color: "var(--color-text-secondary)", textTransform: "uppercase" }}>
+                                    {entry.event_type}
+                                 </span>
+                              </td>
+                              <td style={{ padding: "10px 16px", fontFamily: "var(--font-mono)", fontSize: "11px", fontWeight: 700, color: "var(--color-cyan-500)" }}>{entry.node_id}</td>
+                              <td style={{ padding: "10px 16px", fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--color-text-muted)" }}>{entry.before_root ? entry.before_root.substring(0, 12) + "…" : "—"}</td>
+                              <td style={{ padding: "10px 16px", fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--color-text-muted)" }}>{entry.after_root ? entry.after_root.substring(0, 12) + "…" : "—"}</td>
+                              <td style={{ padding: "10px 16px", fontFamily: "var(--font-sans)", fontSize: "11px", color: "var(--color-text-secondary)", maxWidth: "200px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                 {JSON.stringify(entry.meta || {})}
+                              </td>
+                           </tr>
+                        ))}
+                     </tbody>
+                  </table>
+                  {auditEntries.length === 0 && (
+                     <div style={{ padding: "60px 0", display: "flex", alignItems: "center", justifyContent: "center", opacity: 0.3 }}>
+                        <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "var(--color-text-dim)" }}>No audit records found.</span>
+                     </div>
+                  )}
+               </div>
+            </div>
+         )}
       </div>
-
-      <div className="flex border-b border-border-default gap-8">
-         <button 
-           onClick={() => setActiveTab("live")}
-           className={clsx("pb-4 px-1 text-xs font-bold uppercase tracking-widest transition-all relative", 
-             activeTab === "live" ? "text-accent-cyan" : "text-text-muted hover:text-text-primary"
-           )}
-         >
-           Live Infrastructure Events
-           {activeTab === "live" && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-accent-cyan shadow-[0_0_8px_rgba(6,182,212,0.5)]" />}
-         </button>
-         <button 
-           onClick={() => setActiveTab("audit")}
-           className={clsx("pb-4 px-1 text-xs font-bold uppercase tracking-widest transition-all relative", 
-             activeTab === "audit" ? "text-accent-cyan" : "text-text-muted hover:text-text-primary"
-           )}
-         >
-           Historical Audit Log
-           {activeTab === "audit" && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-accent-cyan shadow-[0_0_8px_rgba(6,182,212,0.5)]" />}
-         </button>
-      </div>
-
-      {activeTab === "live" ? (
-        <div className="mg-card overflow-hidden animate-mg-fadeIn">
-           <div className="p-4 bg-bg-surface-alt/50 border-b border-border-default flex justify-between items-center">
-              <span className="text-[10px] font-bold text-text-muted uppercase tracking-widest">Recent System Activity (Last 100)</span>
-              <div className="flex gap-2">
-                 <button className="p-1.5 rounded hover:bg-bg-surface text-text-muted transition-colors"><Filter size={14} /></button>
-                 <button className="p-1.5 rounded hover:bg-bg-surface text-text-muted transition-colors"><Download size={14} /></button>
-              </div>
-           </div>
-           <div className="flex flex-col">
-              {liveEvents.length > 0 ? (
-                liveEvents.map((ev, i) => <TimelineItem key={i} event={ev} />)
-              ) : (
-                <div className="py-20 flex flex-col items-center justify-center opacity-30 italic text-sm text-text-dim">
-                   <span>Awaiting consensus events from distributed nodes...</span>
-                </div>
-              )}
-           </div>
-        </div>
-      ) : (
-        <div className="mg-card overflow-hidden animate-mg-fadeIn">
-           <div className="p-4 bg-bg-surface-alt/50 border-b border-border-default flex justify-between items-center">
-              <div className="flex items-center gap-4">
-                 <div className="relative">
-                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-dim" />
-                    <input 
-                      type="text" 
-                      placeholder="Search by Node ID or Root Hash..." 
-                      className="bg-bg-surface border border-border-default rounded-lg pl-9 pr-4 py-1.5 text-xs text-text-primary outline-none focus:border-accent-cyan transition-colors w-64"
-                    />
-                 </div>
-              </div>
-              <button className="mg-btn-secondary py-1.5 text-[10px] flex items-center gap-2">
-                 <Download size={12} />
-                 <span>Export CSV</span>
-              </button>
-           </div>
-           
-           <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                 <thead>
-                    <tr className="bg-bg-surface-alt/30 border-b border-border-default">
-                       <th className="p-4 text-[10px] font-bold text-text-muted uppercase tracking-widest">Timestamp</th>
-                       <th className="p-4 text-[10px] font-bold text-text-muted uppercase tracking-widest">Event Type</th>
-                       <th className="p-4 text-[10px] font-bold text-text-muted uppercase tracking-widest">Node ID</th>
-                       <th className="p-4 text-[10px] font-bold text-text-muted uppercase tracking-widest">Before Root</th>
-                       <th className="p-4 text-[10px] font-bold text-text-muted uppercase tracking-widest">After Root</th>
-                       <th className="p-4 text-[10px] font-bold text-text-muted uppercase tracking-widest">Details</th>
-                    </tr>
-                 </thead>
-                 <tbody className="divide-y divide-border-default/50">
-                    {auditEntries.map(entry => (
-                      <tr key={entry.id} className="hover:bg-bg-surface-alt/30 transition-colors">
-                         <td className="p-4 text-[10px] font-mono text-text-dim">{new Date(entry.created_at).toLocaleString()}</td>
-                         <td className="p-4">
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-bg-surface-alt border border-border-default text-text-primary uppercase tracking-tighter">
-                               {entry.event_type}
-                            </span>
-                         </td>
-                         <td className="p-4 text-xs font-mono font-bold text-accent-cyan">{entry.node_id}</td>
-                         <td className="p-4 text-[10px] font-mono text-text-muted">{entry.before_root.substring(0, 12)}...</td>
-                         <td className="p-4 text-[10px] font-mono text-text-muted">{entry.after_root.substring(0, 12)}...</td>
-                         <td className="p-4 text-xs text-text-primary truncate max-w-[200px]">{JSON.stringify(entry.metadata)}</td>
-                      </tr>
-                    ))}
-                 </tbody>
-              </table>
-              {auditEntries.length === 0 && (
-                <div className="py-20 flex items-center justify-center opacity-30 italic text-sm text-text-dim">
-                   <span>No historical audit records found.</span>
-                </div>
-              )}
-           </div>
-        </div>
-      )}
-    </div>
-  )
+   )
 }

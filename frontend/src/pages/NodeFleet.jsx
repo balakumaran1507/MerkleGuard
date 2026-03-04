@@ -1,19 +1,26 @@
 import React, { useState } from "react"
+import { useApi } from "../hooks/useApi"
 import { useEvents } from "../context/EventContext"
 import { NodeCard } from "../components/NodeCard"
 import { PolicyCompare } from "../components/PolicyCompare"
-import { clsx } from "clsx"
+
+const monoLabel = { fontFamily: "var(--font-mono)", fontSize: "9.5px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--color-text-muted)" }
+
+const FILTERS = ["all", "compliant", "drifted", "critical"]
+
+const filterColors = {
+  all: { active: "var(--color-cyan-500)", activeBg: "var(--color-cyan-dim)", activeBorder: "rgba(0,210,255,0.25)" },
+  compliant: { active: "var(--color-status-ok)", activeBg: "var(--color-status-ok-dim)", activeBorder: "rgba(16,212,140,0.25)" },
+  drifted: { active: "var(--color-status-warn)", activeBg: "var(--color-status-warn-dim)", activeBorder: "rgba(245,158,11,0.25)" },
+  critical: { active: "var(--color-status-crit)", activeBg: "var(--color-status-crit-dim)", activeBorder: "rgba(240,75,75,0.25)" },
+}
 
 export function NodeFleet() {
   const { nodes, nodeStatuses } = useEvents()
   const [filter, setFilter] = useState("all")
   const [selectedNodeId, setSelectedNodeId] = useState(null)
 
-  const nodesWithUpdates = nodes.map(n => ({
-    ...n,
-    status: nodeStatuses[n.id] || n.status
-  }))
-
+  const nodesWithUpdates = nodes.map(n => ({ ...n, status: nodeStatuses?.[n.id] || n.status }))
   const filteredNodes = nodesWithUpdates.filter(n => filter === "all" || n.status === filter)
   const selectedNode = nodesWithUpdates.find(n => n.id === selectedNodeId)
 
@@ -25,76 +32,99 @@ export function NodeFleet() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+
+      {/* Heading */}
       <div>
-        <h1 className="text-2xl font-bold text-text-primary tracking-tight">Node Fleet Management</h1>
-        <p className="text-xs text-text-muted font-bold uppercase tracking-widest mt-1">Distributed Integrity Verification Across 16 Endpoints</p>
+        <h1 style={{ fontFamily: "var(--font-sans)", fontSize: "22px", fontWeight: 700, color: "var(--color-text-primary)", letterSpacing: "-0.03em", lineHeight: 1, marginBottom: "6px" }}>
+          Node Fleet
+        </h1>
+        <p style={{ ...monoLabel }}>Distributed integrity verification across {nodesWithUpdates.length} endpoints</p>
       </div>
 
-      <div className="flex gap-2">
-        {["all", "compliant", "drifted", "critical"].map(type => (
-          <button
-            key={type}
-            onClick={() => setFilter(type)}
-            className={clsx(
-              "px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 border",
-              filter === type 
-                ? "bg-bg-surface-alt border-accent-cyan text-accent-cyan" 
-                : "bg-bg-surface border-border-default text-text-muted hover:text-text-primary hover:border-border-light"
-            )}
-          >
-            {type.charAt(0).toUpperCase() + type.slice(1)} ({counts[type]})
-          </button>
-        ))}
+      {/* Filter tabs */}
+      <div style={{ display: "flex", gap: "6px" }}>
+        {FILTERS.map(f => {
+          const active = filter === f
+          const c = filterColors[f]
+          return (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              style={{
+                padding: "6px 14px", borderRadius: "6px", cursor: "pointer",
+                fontFamily: "var(--font-mono)", fontSize: "10px", fontWeight: 700, letterSpacing: "0.06em",
+                background: active ? c.activeBg : "var(--color-bg-surface)",
+                border: `1px solid ${active ? c.activeBorder : "var(--color-border-default)"}`,
+                color: active ? c.active : "var(--color-text-muted)",
+                transition: "all 0.15s",
+              }}
+            >
+              {f.charAt(0).toUpperCase() + f.slice(1)} · {counts[f]}
+            </button>
+          )
+        })}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Node grid */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(195px, 1fr))", gap: "10px" }}>
         {filteredNodes.map(node => (
-          <NodeCard 
-            key={node.id} 
-            node={node} 
+          <NodeCard
+            key={node.id}
+            node={node}
             isSelected={selectedNodeId === node.id}
-            onClick={() => setSelectedNodeId(node.id)}
+            onClick={() => setSelectedNodeId(node.id === selectedNodeId ? null : node.id)}
           />
         ))}
       </div>
 
+      {/* Detail panel */}
       {selectedNode && (
-        <div className="mg-card p-6 flex flex-col gap-6 mt-4 animate-mg-fadeIn">
-          <div className="flex flex-col gap-1">
-             <h2 className="text-lg font-bold text-text-primary">Policy Compliance Detail — {selectedNode.name}</h2>
-             <p className="text-xs text-text-muted">Comparing expected baseline cryptographic proof against current snapshot telemetry.</p>
+        <div className="mg-card animate-mg-fadeIn" style={{ padding: "24px 28px" }}>
+          <div style={{ marginBottom: "20px" }}>
+            <h2 style={{ fontFamily: "var(--font-sans)", fontSize: "16px", fontWeight: 700, color: "var(--color-text-primary)", marginBottom: "4px" }}>
+              Policy Detail — {selectedNode.name}
+            </h2>
+            <p style={{ fontFamily: "var(--font-sans)", fontSize: "11px", color: "var(--color-text-muted)" }}>
+              Comparing cryptographic baseline proof against current snapshot telemetry.
+            </p>
           </div>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-             <div className="lg:col-span-2">
-                <PolicyCompare policies={selectedNode.policies} />
-             </div>
-             
-             <div className="flex flex-col gap-6">
-                <div className="mg-card bg-bg-surface-alt/50 p-4 border-dashed">
-                   <h4 className="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-3">Node Telemetry</h4>
-                   <div className="flex flex-col gap-2 font-mono text-xs">
-                      <div className="flex justify-between">
-                         <span className="text-text-dim">Uptime</span>
-                         <span className="text-mg-green">{selectedNode.uptime}</span>
-                      </div>
-                      <div className="flex justify-between">
-                         <span className="text-text-dim">Reconciliations</span>
-                         <span className="text-accent-cyan">{selectedNode.reconcile_count}</span>
-                      </div>
-                      <div className="flex justify-between">
-                         <span className="text-text-dim">Last Snapshot</span>
-                         <span className="text-text-primary">{new Date(selectedNode.last_snapshot).toLocaleString()}</span>
-                      </div>
-                   </div>
-                </div>
 
-                <div className="flex flex-col gap-2">
-                   <button className="mg-btn-primary text-xs w-full">Force Snapshot Re-Capture</button>
-                   <button className="mg-btn-secondary text-xs w-full">Export Integrity Proof</button>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 260px", gap: "24px" }}>
+            <PolicyCompare policies={selectedNode.policy_state} driftedCategories={selectedNode.drifted_categories || []} />
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              {/* Telemetry */}
+              <div
+                style={{
+                  padding: "14px 16px", borderRadius: "8px",
+                  background: "var(--color-bg-elevated)",
+                  border: "1px solid var(--color-border-default)",
+                }}
+              >
+                <span style={{ ...monoLabel, display: "block", marginBottom: "12px" }}>Node Telemetry</span>
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px", fontFamily: "var(--font-mono)", fontSize: "11px" }}>
+                  {[
+                    { label: "Uptime Since", value: new Date(selectedNode.uptime_start).toLocaleDateString(), color: "var(--color-status-ok)" },
+                    { label: "Reconciliations", value: selectedNode.reconcile_count, color: "var(--color-cyan-500)" },
+                    { label: "Snapshots", value: selectedNode.snapshot_count, color: "var(--color-text-secondary)" },
+                  ].map((row, i) => (
+                    <div key={i} style={{ display: "flex", justifyContent: "space-between" }}>
+                      <span style={{ color: "var(--color-text-muted)" }}>{row.label}</span>
+                      <span style={{ fontWeight: 700, color: row.color }}>{row.value}</span>
+                    </div>
+                  ))}
                 </div>
-             </div>
+              </div>
+
+              {/* Actions */}
+              <button className="mg-btn-primary" style={{ width: "100%", justifyContent: "center" }}>
+                Force Snapshot Re-Capture
+              </button>
+              <button className="mg-btn-secondary" style={{ width: "100%", justifyContent: "center" }}>
+                Export Integrity Proof
+              </button>
+            </div>
           </div>
         </div>
       )}
