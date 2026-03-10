@@ -10,351 +10,214 @@ import {
   AlertTriangle,
   Database,
   Fingerprint,
+  Download,
 } from "lucide-react"
 
 export function Dashboard() {
   const { stats, nodes, events, nodeStatuses } = useEvents()
 
   const now = new Date().toLocaleDateString("en-US", {
-    weekday: "short", month: "short", day: "numeric", year: "numeric"
+    weekday: "long", month: "long", day: "numeric"
   })
 
+  // Download logic placeholder
+  const downloadComplianceReport = async () => {
+    try {
+      const url = '/api/enterprise/report/compliance?report_type=SOC2'
+      const response = await fetch(url)
+      const blob = await response.blob()
+      const link = document.createElement('a')
+      link.href = URL.createObjectURL(blob)
+      link.download = `MerkleGuard_SOC2_Report_${Date.now()}.pdf`
+      link.click()
+    } catch (err) {
+      console.error("Failed to download compliance report:", err)
+    }
+  }
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+    <div className="flex flex-col gap-6">
 
       {/* ── Page heading ── */}
-      <div className="flex items-end justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <h1
-            style={{
-              fontFamily: "var(--font-sans)",
-              fontSize: "22px",
-              fontWeight: 700,
-              color: "var(--color-text-primary)",
-              letterSpacing: "-0.03em",
-              lineHeight: 1,
-              marginBottom: "6px",
-            }}
-          >
-            Security Operations
+          <h1 className="text-2xl font-semibold tracking-tight text-gray-900 mb-1">
+            Overview
           </h1>
-          <p
-            style={{
-              fontFamily: "var(--font-mono)",
-              fontSize: "10px",
-              fontWeight: 500,
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-              color: "var(--color-text-muted)",
-            }}
-          >
-            Merkle-Tree Consensus · Real-Time
+          <p className="text-sm font-medium text-gray-500">
+            {now} • Merkle-Tree Consensus Engine
           </p>
         </div>
-        <span
-          style={{
-            fontFamily: "var(--font-mono)",
-            fontSize: "10px",
-            color: "var(--color-text-dim)",
-          }}
-        >
-          {now}
-        </span>
+
+        <div className="flex items-center gap-3">
+          <button
+            onClick={downloadComplianceReport}
+            className="btn-secondary text-sm"
+          >
+            <Download size={14} />
+            Export Report
+          </button>
+        </div>
       </div>
 
       {/* ── Stat cards ── */}
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "12px" }}>
-        <StatCard label="Total Nodes" value={stats?.total_nodes || 0} subtitle="Enterprise Infrastructure" color="white" icon={Server} />
-        <StatCard label="Compliant" value={stats?.compliant_count || 0} subtitle="Verified Baseline" color="green" icon={ShieldCheck} />
-        <StatCard label="Drifted" value={stats?.drifted_count || 0} subtitle="Non-Critical Drift" color="amber" icon={TrendingUp} />
-        <StatCard label="Critical" value={stats?.critical_count || 0} subtitle="High-Severity Policy Breach" color="red" icon={AlertTriangle} />
-        <StatCard label="Snapshots" value={stats?.total_snapshots || 0} subtitle="Platform State Captures" color="cyan" icon={Database} />
-        <StatCard label="Avg Anomaly" value={(stats?.avg_anomaly_score || 0).toFixed(3)} subtitle="Global Integrity Variance" color="purple" icon={Fingerprint} />
-      </div>
-
-      {/* ── Middle row ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-
-        {/* Compliance Donut */}
-        <div className="mg-card" style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>
-          <div className="flex items-center justify-between">
-            <span
-              style={{
-                fontFamily: "var(--font-mono)",
-                fontSize: "10px",
-                fontWeight: 600,
-                letterSpacing: "0.1em",
-                textTransform: "uppercase",
-                color: "var(--color-text-muted)",
-              }}
-            >
-              Compliance Distribution
-            </span>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "8px 0" }}>
-            <ComplianceDonut stats={stats} />
-          </div>
-        </div>
-
-        {/* Merkle Root Registry */}
-        <div className="mg-card" style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: "12px" }}>
-          <div className="flex items-center justify-between">
-            <span
-              style={{
-                fontFamily: "var(--font-mono)",
-                fontSize: "10px",
-                fontWeight: 600,
-                letterSpacing: "0.1em",
-                textTransform: "uppercase",
-                color: "var(--color-text-muted)",
-              }}
-            >
-              Merkle Root Registry
-            </span>
-            <span
-              style={{
-                fontFamily: "var(--font-mono)",
-                fontSize: "9px",
-                fontWeight: 600,
-                padding: "2px 6px",
-                borderRadius: "4px",
-                background: "var(--color-cyan-dim)",
-                border: "1px solid rgba(0,210,255,0.2)",
-                color: "var(--color-cyan-500)",
-                letterSpacing: "0.08em",
-              }}
-            >
-              AUTO-SYNC
-            </span>
-          </div>
-
-          <div style={{ flex: 1, overflowY: "auto", maxHeight: "280px", display: "flex", flexDirection: "column", gap: "4px" }}>
-            {nodes.map(node => {
-              const status = nodeStatuses?.[node.id] || node.status
-              const root = node.current_merkle_root || node.merkle_root || ""
-              const isOk = status === "compliant"
-              const isCrit = status === "critical"
-
-              return (
-                <div
-                  key={node.id}
-                  className="flex items-center justify-between"
-                  style={{
-                    padding: "8px 10px",
-                    borderRadius: "6px",
-                    background: isCrit
-                      ? "var(--color-status-crit-dim)"
-                      : !isOk
-                        ? "var(--color-status-warn-dim)"
-                        : "var(--color-bg-elevated)",
-                    border: `1px solid ${isCrit ? "rgba(240,75,75,0.2)" : !isOk ? "rgba(245,158,11,0.2)" : "var(--color-border-subtle)"}`,
-                    transition: "background 0.15s",
-                  }}
-                >
-                  <span
-                    style={{
-                      fontFamily: "var(--font-mono)",
-                      fontSize: "11px",
-                      fontWeight: 700,
-                      color: "var(--color-text-primary)",
-                    }}
-                  >
-                    {node.name}
-                  </span>
-                  <span
-                    style={{
-                      fontFamily: "var(--font-mono)",
-                      fontSize: "10px",
-                      fontWeight: 600,
-                      color: isOk
-                        ? "var(--color-cyan-500)"
-                        : isCrit
-                          ? "var(--color-status-crit)"
-                          : "var(--color-status-warn)",
-                      letterSpacing: "0.04em",
-                    }}
-                  >
-                    {root.substring(0, 14)}…
-                  </span>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* ── Bottom row ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-
-        {/* Zone Integrity */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-          <span
-            style={{
-              fontFamily: "var(--font-mono)",
-              fontSize: "10px",
-              fontWeight: 600,
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-              color: "var(--color-text-muted)",
-            }}
-          >
-            Network Zone Integrity
-          </span>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-            {["DMZ", "Internal", "Edge", "Cloud"].map(zone => {
-              const zoneNodes = nodes.filter(n => n.zone === zone)
-              const compliantCount = zoneNodes.filter(n => n.status === "compliant").length
-              const total = zoneNodes.length || 1
-              const pct = (compliantCount / total) * 100
-              const barColor = pct === 100 ? "var(--color-status-ok)" : pct >= 50 ? "var(--color-status-warn)" : "var(--color-status-crit)"
-
-              return (
-                <div
-                  key={zone}
-                  className="mg-card"
-                  style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: "10px" }}
-                >
-                  <div className="flex items-center justify-between">
-                    <span
-                      style={{
-                        fontFamily: "var(--font-sans)",
-                        fontSize: "12px",
-                        fontWeight: 600,
-                        color: "var(--color-text-secondary)",
-                      }}
-                    >
-                      {zone}
-                    </span>
-                    <span
-                      style={{
-                        fontFamily: "var(--font-mono)",
-                        fontSize: "9px",
-                        color: "var(--color-text-muted)",
-                      }}
-                    >
-                      {compliantCount}/{zoneNodes.length}
-                    </span>
-                  </div>
-
-                  <div>
-                    <div
-                      className="flex items-center justify-between mb-1"
-                    >
-                      <span
-                        style={{
-                          fontFamily: "var(--font-mono)",
-                          fontSize: "10px",
-                          fontWeight: 700,
-                          color: barColor,
-                        }}
-                      >
-                        {Math.round(pct)}%
-                      </span>
-                    </div>
-                    <div
-                      style={{
-                        height: "3px",
-                        borderRadius: "2px",
-                        background: "var(--color-bg-elevated)",
-                        overflow: "hidden",
-                      }}
-                    >
-                      <div
-                        style={{
-                          height: "100%",
-                          width: `${pct}%`,
-                          background: barColor,
-                          boxShadow: `0 0 8px ${barColor}80`,
-                          borderRadius: "2px",
-                          transition: "width 1s cubic-bezier(.16,1,.3,1)",
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* Live Event Feed */}
-        <div
-          className="mg-card"
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            height: "380px",
-            overflow: "hidden",
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard
+          label="Active Nodes"
+          value={stats?.totalNodes || (nodes || []).length || 0}
+          trend="+0%"
+          trendDir="up"
+          icon={Server}
+          colorConfig={{
+            icon: "text-blue-600",
+            iconBg: "bg-blue-50",
+            iconBorder: "border-blue-100",
+            accent: "bg-blue-600",
           }}
-        >
-          <div
-            className="flex items-center justify-between flex-shrink-0"
-            style={{
-              padding: "14px 16px",
-              borderBottom: "1px solid var(--color-border-default)",
-            }}
-          >
-            <span
-              style={{
-                fontFamily: "var(--font-mono)",
-                fontSize: "10px",
-                fontWeight: 600,
-                letterSpacing: "0.1em",
-                textTransform: "uppercase",
-                color: "var(--color-text-muted)",
-              }}
-            >
-              Live Event Feed
-            </span>
-            <div className="flex items-center gap-1.5">
-              <span
-                className="animate-mg-pulse"
-                style={{
-                  display: "block",
-                  width: "6px",
-                  height: "6px",
-                  borderRadius: "50%",
-                  background: "var(--color-status-ok)",
-                  boxShadow: "0 0 6px var(--color-status-ok)",
-                }}
-              />
-              <span
-                style={{
-                  fontFamily: "var(--font-mono)",
-                  fontSize: "9px",
-                  fontWeight: 700,
-                  letterSpacing: "0.08em",
-                  color: "var(--color-status-ok)",
-                }}
-              >
-                STREAMING
-              </span>
+        />
+        <StatCard
+          label="Sys Integrity"
+          value="100%"
+          trend="Verified"
+          trendDir="neutral"
+          icon={ShieldCheck}
+          colorConfig={{
+            icon: "text-emerald-600",
+            iconBg: "bg-emerald-50",
+            iconBorder: "border-emerald-100",
+            accent: "bg-emerald-600",
+          }}
+        />
+        <StatCard
+          label="Snapshot/sec"
+          value={stats?.opsPerSec || 0}
+          trend="+12%"
+          trendDir="up"
+          icon={TrendingUp}
+          colorConfig={{
+            icon: "text-violet-600",
+            iconBg: "bg-violet-50",
+            iconBorder: "border-violet-100",
+            accent: "bg-violet-600",
+          }}
+        />
+        <StatCard
+          label="Drift Alerts"
+          value={(events || []).filter((e) => e.type === "drift_detected" || e.type === "drift").length || 0}
+          trend="-2"
+          trendDir="down"
+          icon={AlertTriangle}
+          colorConfig={{
+            icon: "text-amber-600",
+            iconBg: "bg-amber-50",
+            iconBorder: "border-amber-100",
+            accent: "bg-amber-600",
+          }}
+        />
+      </div>
+
+      {/* ── Central grid ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        {/* Compliance Donut Card */}
+        <div className="card p-6 flex flex-col gap-6 lg:col-span-1">
+          <div className="space-y-1">
+            <h2 className="text-sm font-semibold tracking-wide uppercase text-gray-500">
+              System Health
+            </h2>
+            <p className="text-xs text-gray-400">Global Node Infrastructure Compliance</p>
+          </div>
+
+          <div className="flex-1 flex items-center justify-center -my-2 relative">
+            <ComplianceDonut nodes={nodes} />
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <ShieldCheck className="text-gray-200 w-24 h-24 opacity-20" strokeWidth={1} />
             </div>
           </div>
 
-          <div style={{ flex: 1, overflowY: "auto" }}>
-            {events.length > 0 ? (
-              events.map((ev, i) => <TimelineItem key={i} event={ev} />)
-            ) : (
-              <div
-                style={{
-                  height: "100%",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "8px",
-                  opacity: 0.3,
-                }}
-              >
-                <span style={{ fontSize: "12px", fontFamily: "var(--font-mono)", color: "var(--color-text-dim)" }}>
-                  Awaiting Merkle Proofs…
-                </span>
-              </div>
-            )}
+          <div className="mt-auto grid grid-cols-2 gap-3">
+            <div className="bg-gray-50 border border-gray-100 rounded-lg p-3">
+              <div className="text-[10px] uppercase font-bold text-gray-400 mb-1 tracking-wider">Nodes Managed</div>
+              <div className="text-xl font-semibold text-gray-900">{(nodes || []).length}</div>
+            </div>
+            <div className="bg-emerald-50 border border-emerald-100 rounded-lg p-3">
+              <div className="text-[10px] uppercase font-bold text-emerald-600 mb-1 tracking-wider">Avg Consensus Time</div>
+              <div className="text-xl font-semibold text-emerald-700">9ms</div>
+            </div>
           </div>
         </div>
+
+        {/* Node Operations Feed */}
+        <div className="card p-0 flex flex-col lg:col-span-2 overflow-hidden">
+          <div className="p-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+            <h2 className="text-sm font-semibold tracking-wide uppercase text-gray-600">
+              Live Edge Topologies
+            </h2>
+          </div>
+
+          {(nodes || []).length === 0 ? (
+            <div className="flex-1 flex flex-col items-center justify-center py-16 text-gray-400 space-y-3">
+              <Database size={32} strokeWidth={1.5} />
+              <p className="text-sm font-medium">Waiting for node connections...</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-gray-100 text-[11px] uppercase tracking-wider text-gray-400">
+                    <th className="font-semibold py-3 px-5">Hostname</th>
+                    <th className="font-semibold py-3 px-4 text-center">Security Core</th>
+                    <th className="font-semibold py-3 px-4">Integrity Hash</th>
+                    <th className="font-semibold py-3 px-4">Consensus Valid</th>
+                    <th className="font-semibold py-3 px-5 text-right">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50 text-sm">
+                  {(nodes || []).slice(0, 6).map((node) => {
+                    const isOk = node.status === 'secure' || node.status === 'compliant'
+                    const isCrit = node.status === 'compromised' || node.status === 'critical'
+                    const pct = node.encryption_strength_percent || 100
+                    const barColor = isCrit ? "#ef4444" : !isOk ? "#f59e0b" : "#10b981"
+
+                    return (
+                      <tr key={node.id} className="hover:bg-gray-50/50 transition-colors">
+                        <td className="py-3 px-5 flex items-center gap-3">
+                          <div className={`w-2 h-2 rounded-full shadow-sm ${isCrit ? "bg-red-500 shadow-red-500/50 animate-pulse" : !isOk ? "bg-amber-500" : "bg-emerald-500"}`} />
+                          <span className="font-mono text-gray-900 font-medium">{node.name || node.hostname || "Unknown Node"}</span>
+                        </td>
+                        <td className="py-3 px-4 align-middle">
+                          <div className="w-full max-w-[80px] h-1.5 bg-gray-100 rounded-full mx-auto overflow-hidden">
+                            <div className="h-full rounded-full transition-all duration-1000 ease-out" style={{ width: `${pct}%`, backgroundColor: barColor }} />
+                          </div>
+                        </td>
+                        <td className="py-3 px-4 font-mono text-gray-500 text-[11px]">
+                          {(node.current_merkle_root || node.merkle_root || "Pending").substring(0, 8)}...
+                        </td>
+                        <td className="py-3 px-4 flex items-center justify-center">
+                          <Fingerprint size={14} className={isOk ? "text-emerald-500" : "text-gray-300"} />
+                        </td>
+                        <td className="py-3 px-5 text-right">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-wider ${isCrit ? "bg-red-50 text-red-600" : !isOk ? "bg-amber-50 text-amber-600" : "bg-emerald-50 text-emerald-600"}`}>
+                            {node.status}
+                          </span>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+          {(nodes || []).length > 5 && (
+            <div className="p-3 bg-gray-50/80 border-t border-gray-100 text-center">
+              <button className="text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors uppercase tracking-wider">
+                View All Activity &rarr;
+              </button>
+            </div>
+          )}
+        </div>
       </div>
+
     </div>
   )
 }

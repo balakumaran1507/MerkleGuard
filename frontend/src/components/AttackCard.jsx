@@ -15,91 +15,39 @@ export function AttackCard({ attack, isSelected, onClick }) {
   return (
     <div
       onClick={onClick}
-      style={{
-        padding: "14px 16px",
-        borderRadius: "8px",
-        cursor: "pointer",
-        position: "relative",
-        overflow: "hidden",
-        background: isSelected ? "rgba(240,75,75,0.06)" : "var(--color-bg-surface)",
-        border: `1px solid ${isSelected ? "rgba(240,75,75,0.35)" : "var(--color-border-default)"}`,
-        boxShadow: isSelected ? "0 0 20px rgba(240,75,75,0.1)" : "none",
-        transition: "all 0.2s",
-      }}
+      className={`card p-4 transition-all cursor-pointer relative overflow-hidden border ${isSelected
+          ? "border-red-300 ring-2 ring-red-500/20 bg-red-50/50"
+          : "border-gray-100 hover:border-gray-300 hover:shadow-sm bg-white"
+        }`}
     >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "10px" }}>
+      <div className="flex justify-between items-start mb-3">
         <div
-          style={{
-            width: 32,
-            height: 32,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            borderRadius: "7px",
-            background: isSelected ? "rgba(240,75,75,0.15)" : "var(--color-bg-elevated)",
-            border: `1px solid ${isSelected ? "rgba(240,75,75,0.3)" : "var(--color-border-default)"}`,
-            color: isSelected ? "var(--color-status-crit)" : "var(--color-text-muted)",
-          }}
+          className={`w-8 h-8 flex items-center justify-center rounded-lg border ${isSelected
+              ? "bg-red-100 border-red-200 text-red-600"
+              : "bg-gray-50 border-gray-200 text-gray-500"
+            }`}
         >
-          <Icon size={15} strokeWidth={1.75} />
+          <Icon size={16} strokeWidth={2} />
         </div>
         <span
-          style={{
-            fontFamily: "var(--font-mono)",
-            fontSize: "9px",
-            fontWeight: 700,
-            letterSpacing: "0.1em",
-            padding: "2px 7px",
-            borderRadius: "4px",
-            background: isCrit ? "var(--color-status-crit-dim)" : "var(--color-status-warn-dim)",
-            border: `1px solid ${isCrit ? "rgba(240,75,75,0.25)" : "rgba(245,158,11,0.25)"}`,
-            color: isCrit ? "var(--color-status-crit)" : "var(--color-status-warn)",
-          }}
+          className={`font-mono text-[9px] font-bold tracking-widest px-2 py-0.5 rounded border ${isCrit
+              ? "bg-red-50 border-red-200 text-red-600"
+              : "bg-amber-50 border-amber-200 text-amber-600"
+            }`}
         >
           {attack.severity}
         </span>
       </div>
 
-      <h4
-        style={{
-          fontFamily: "var(--font-sans)",
-          fontSize: "13px",
-          fontWeight: 600,
-          color: "var(--color-text-primary)",
-          marginBottom: "4px",
-        }}
-      >
+      <h4 className="font-semibold text-sm text-gray-900 mb-1">
         {attack.name}
       </h4>
-      <p
-        style={{
-          fontFamily: "var(--font-sans)",
-          fontSize: "11px",
-          color: "var(--color-text-muted)",
-          lineHeight: 1.55,
-          display: "-webkit-box",
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: "vertical",
-          overflow: "hidden",
-        }}
-      >
+      <p className="text-xs font-medium text-gray-500 leading-relaxed line-clamp-2">
         {attack.description}
       </p>
 
       {isSelected && (
-        <div
-          style={{
-            position: "absolute",
-            top: -20,
-            right: -20,
-            width: 80,
-            height: 80,
-            borderRadius: "50%",
-            background: "rgba(240,75,75,0.12)",
-            filter: "blur(24px)",
-            pointerEvents: "none",
-          }}
-        />
+        <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full bg-red-500/10 blur-xl pointer-events-none" />
       )}
     </div>
   )

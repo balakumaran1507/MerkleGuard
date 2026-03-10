@@ -1,30 +1,19 @@
-import React, { useState } from "react"
-import { Sidebar } from "./Sidebar"
-import { Header } from "./Header"
+import React, { useState } from 'react';
+import { Sidebar } from './Sidebar';
 
 export function Layout({ children }) {
-  const [collapsed, setCollapsed] = useState(false)
+  const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <div
-      className="flex min-h-screen overflow-hidden"
-      style={{ background: "var(--color-bg-primary)" }}
-    >
-      <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
-
-      <div className="flex-1 flex flex-col h-screen overflow-hidden min-w-0">
-        <Header />
-        <main
-          className="flex-1 overflow-y-auto"
-          style={{ padding: "28px 32px" }}
-        >
-          <div
-            className="max-w-[1440px] mx-auto animate-mg-fadeIn"
-          >
+    <div className="min-h-screen bg-[#fafafa] flex font-sans">
+      <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} />
+      <main className={`flex-1 transition-all duration-300 ${collapsed ? 'ml-16' : 'ml-64'}`}>
+        <div className="p-8 animate-fade-in">
+          <div className="max-w-[1400px] mx-auto w-full">
             {children}
           </div>
-        </main>
-      </div>
+        </div>
+      </main>
     </div>
-  )
+  );
 }

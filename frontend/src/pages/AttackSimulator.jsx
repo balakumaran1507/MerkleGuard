@@ -4,7 +4,7 @@ import { useEvents } from "../context/EventContext"
 import { AttackCard } from "../components/AttackCard"
 import { AnomalyGauge } from "../components/AnomalyGauge"
 import { client } from "../api/client"
-import { Zap, CheckCircle2, Loader2 } from "lucide-react"
+import { Zap, CheckCircle2, Loader2, Target, ShieldAlert } from "lucide-react"
 
 const ATTACKS = [
   { id: "firewall_bypass", name: "Firewall Bypass", description: "Silently disable firewall rules and security groups to allow unauthorized traffic.", severity: "HIGH" },
@@ -20,8 +20,6 @@ const STEPS = [
   { label: "Anomaly Scoring", sub: "Computing weighted integrity variance score" },
   { label: "Reconciliation", sub: "Executing automated remediation action" },
 ]
-
-const monoLabel = { fontFamily: "var(--font-mono)", fontSize: "9.5px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--color-text-muted)" }
 
 export function AttackSimulator() {
   const { data: nodesData } = useApi("/api/nodes")
@@ -54,39 +52,36 @@ export function AttackSimulator() {
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+    <div className="flex flex-col gap-6">
 
       {/* Heading */}
-      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
+      <div className="flex items-end justify-between">
         <div>
-          <h1 style={{ fontFamily: "var(--font-sans)", fontSize: "22px", fontWeight: 700, color: "var(--color-text-primary)", letterSpacing: "-0.03em", lineHeight: 1, marginBottom: "6px" }}>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900 mb-1">
             Adversary Simulator
           </h1>
-          <p style={{ ...monoLabel }}>Stress-test zero-trust policies with synthetic drift vectors</p>
+          <p className="text-sm font-medium text-gray-500">
+            Stress-test zero-trust policies with synthetic drift vectors
+          </p>
         </div>
         <button
           onClick={handleLaunch}
           disabled={isSimulating || selectedNodes.length === 0}
-          style={{
-            display: "inline-flex", alignItems: "center", gap: "8px",
-            padding: "8px 16px", borderRadius: "6px", fontSize: "12px", fontWeight: 600,
-            fontFamily: "var(--font-sans)", cursor: isSimulating || selectedNodes.length === 0 ? "not-allowed" : "pointer",
-            background: isSimulating || selectedNodes.length === 0 ? "var(--color-bg-elevated)" : "var(--color-status-crit)",
-            color: isSimulating || selectedNodes.length === 0 ? "var(--color-text-muted)" : "#0a0b0f",
-            border: "1px solid transparent",
-            opacity: selectedNodes.length === 0 ? 0.5 : 1,
-            transition: "all 0.2s",
-          }}
+          className={`flex items-center gap-2 px-6 py-2.5 rounded-md text-sm font-semibold transition-all ${isSimulating || selectedNodes.length === 0
+            ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+            : "bg-red-600 hover:bg-red-700 text-white shadow-sm"
+            }`}
         >
-          <Zap size={13} strokeWidth={2} fill="currentColor" />
+          {isSimulating ? <Loader2 size={16} className="animate-spin" /> : <Zap size={16} />}
           {isSimulating ? "Simulating…" : "Launch Attack"}
         </button>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "220px 1fr", gap: "16px" }}>
+      <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
+
         {/* Attack selection */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-          <span style={{ ...monoLabel, display: "block", marginBottom: "6px" }}>Attack Vector</span>
+        <div className="flex flex-col gap-3">
+          <span className="text-[10px] font-bold tracking-widest uppercase text-gray-400">Attack Vector</span>
           {ATTACKS.map(attack => (
             <AttackCard
               key={attack.id}
@@ -98,50 +93,57 @@ export function AttackSimulator() {
         </div>
 
         {/* Right panel */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+        <div className="flex flex-col gap-6">
 
           {/* Target selector */}
-          <div className="mg-card" style={{ padding: "20px 24px" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
-              <span style={{ ...monoLabel }}>Target Infrastructure</span>
+          <div className="card p-5">
+            <div className="flex items-center justify-between mb-4 border-b border-gray-100 pb-3">
+              <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider flex items-center gap-2">
+                <Target size={14} className="text-blue-500" />
+                Target Infrastructure
+              </span>
               <button
-                onClick={() => setSelectedNodes(nodes.map(n => n.id))}
-                style={{ fontFamily: "var(--font-mono)", fontSize: "10px", fontWeight: 700, letterSpacing: "0.06em", color: "var(--color-cyan-500)", background: "none", border: "none", cursor: "pointer" }}
+                onClick={() => !isSimulating && setSelectedNodes(nodes.map(n => n.id))}
+                className="text-[10px] font-bold tracking-widest text-blue-600 hover:text-blue-700 uppercase"
               >
                 SELECT ALL
               </button>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "8px" }}>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
               {nodes.map(node => {
                 const sel = selectedNodes.includes(node.id)
                 return (
                   <button
                     key={node.id}
                     onClick={() => !isSimulating && toggleNode(node.id)}
-                    style={{
-                      padding: "8px 6px", borderRadius: "6px", cursor: "pointer",
-                      fontFamily: "var(--font-mono)", fontSize: "10px", fontWeight: 700,
-                      letterSpacing: "0.04em",
-                      background: sel ? "var(--color-cyan-dim)" : "var(--color-bg-elevated)",
-                      border: `1px solid ${sel ? "rgba(0,210,255,0.3)" : "var(--color-border-default)"}`,
-                      color: sel ? "var(--color-cyan-500)" : "var(--color-text-muted)",
-                      boxShadow: sel ? "0 0 10px rgba(0,210,255,0.15)" : "none",
-                      transition: "all 0.15s",
-                    }}
+                    className={`px-3 py-2 rounded-md text-xs font-semibold tracking-wide transition-all border ${sel
+                      ? "bg-blue-50 border-blue-200 text-blue-700 ring-1 ring-blue-500/20"
+                      : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300"
+                      }`}
                   >
                     {node.name}
                   </button>
                 )
               })}
+              {nodes.length === 0 && (
+                <div className="col-span-full py-8 text-center text-sm font-medium text-gray-400">
+                  No active nodes available to target.
+                </div>
+              )}
             </div>
           </div>
 
           {/* Pipeline */}
           {(isSimulating || simulationResults) && (
-            <div className="mg-card animate-mg-fadeIn" style={{ padding: "20px 24px" }}>
-              <span style={{ ...monoLabel, display: "block", marginBottom: "20px" }}>Detection Pipeline</span>
+            <div className="card p-6 animate-fade-in relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-8 opacity-5">
+                <ShieldAlert className="w-48 h-48" />
+              </div>
 
-              <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
+              <span className="text-[10px] font-bold tracking-widest uppercase text-gray-400 mb-6 block">Detection Pipeline</span>
+
+              <div className="flex flex-col gap-0 relative z-10">
                 {STEPS.map((step, idx) => {
                   const stepIdx = idx + 1
                   const isCompleted = currentStep > stepIdx
@@ -151,68 +153,54 @@ export function AttackSimulator() {
                   return (
                     <div
                       key={idx}
-                      style={{ display: "flex", gap: "14px", opacity: isPending ? 0.3 : 1, transition: "opacity 0.4s" }}
+                      className={`flex gap-4 transition-opacity duration-300 ${isPending ? 'opacity-30' : 'opacity-100'}`}
                     >
                       {/* Track */}
-                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                        <div style={{
-                          width: 28, height: 28, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-                          background: isCompleted ? "var(--color-status-ok)" : isActive ? "var(--color-cyan-dim)" : "var(--color-bg-elevated)",
-                          border: `1.5px solid ${isCompleted ? "var(--color-status-ok)" : isActive ? "var(--color-cyan-500)" : "var(--color-border-default)"}`,
-                          color: isCompleted ? "#04050a" : isActive ? "var(--color-cyan-500)" : "var(--color-text-muted)",
-                          transition: "all 0.3s",
-                        }}>
+                      <div className="flex flex-col items-center">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border-2 transition-all ${isCompleted
+                          ? "bg-emerald-500 border-emerald-500 text-white"
+                          : isActive
+                            ? "bg-blue-50 border-blue-500 text-blue-600"
+                            : "bg-gray-50 border-gray-200 text-gray-400"
+                          }`}>
                           {isCompleted
-                            ? <CheckCircle2 size={14} strokeWidth={2.5} />
+                            ? <CheckCircle2 size={16} strokeWidth={2.5} />
                             : isActive
-                              ? <Loader2 size={13} strokeWidth={2} style={{ animation: "mg-spin-slow 1s linear infinite" }} />
-                              : <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px", fontWeight: 700 }}>{stepIdx}</span>
+                              ? <Loader2 size={16} strokeWidth={2} className="animate-spin" />
+                              : <span className="font-mono text-xs font-bold">{stepIdx}</span>
                           }
                         </div>
                         {idx < STEPS.length - 1 && (
-                          <div style={{
-                            width: "1.5px", flex: 1, minHeight: 20,
-                            background: isCompleted ? "var(--color-status-ok)" : "var(--color-border-default)",
-                            transition: "background 0.4s",
-                            margin: "3px 0",
-                          }} />
+                          <div className={`w-0.5 flex-1 min-h-[24px] my-1 transition-colors duration-300 ${isCompleted ? "bg-emerald-500" : "bg-gray-200"}`} />
                         )}
                       </div>
 
                       {/* Content */}
-                      <div style={{ flex: 1, paddingBottom: idx < STEPS.length - 1 ? "16px" : "0" }}>
-                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "2px" }}>
-                          <span style={{ fontFamily: "var(--font-sans)", fontSize: "12.5px", fontWeight: 600, color: "var(--color-text-primary)" }}>
+                      <div className={`flex-1 ${idx < STEPS.length - 1 ? "pb-4" : ""}`}>
+                        <div className="flex items-center justify-between mb-1 mt-1">
+                          <span className="text-sm font-semibold text-gray-900">
                             {step.label}
                           </span>
                           {isActive && idx === 3 && <AnomalyGauge score={0.842} />}
                         </div>
-                        <p style={{ fontFamily: "var(--font-sans)", fontSize: "11px", color: "var(--color-text-muted)" }}>{step.sub}</p>
+                        <p className="text-xs font-medium text-gray-500">{step.sub}</p>
                       </div>
                     </div>
                   )
                 })}
               </div>
 
+              {/* Result Banner */}
               {!isSimulating && simulationResults && (
-                <div
-                  className="animate-mg-fadeIn"
-                  style={{
-                    marginTop: "16px", padding: "14px 16px",
-                    borderRadius: "8px",
-                    background: "var(--color-status-ok-dim)",
-                    border: "1px solid rgba(16,212,140,0.2)",
-                    display: "flex", gap: "12px", alignItems: "flex-start",
-                  }}
-                >
-                  <div style={{ color: "var(--color-status-ok)", marginTop: "1px" }}>
-                    <CheckCircle2 size={16} strokeWidth={2} />
+                <div className="mt-8 p-4 rounded-lg bg-emerald-50 border border-emerald-100 flex items-start gap-3 animate-fade-in">
+                  <div className="text-emerald-500 mt-0.5">
+                    <CheckCircle2 size={18} strokeWidth={2.5} />
                   </div>
                   <div>
-                    <p style={{ fontFamily: "var(--font-sans)", fontSize: "12px", fontWeight: 700, color: "var(--color-status-ok)", marginBottom: "4px" }}>
+                    <h4 className="text-sm font-bold text-emerald-800 mb-1">
                       Threat Neutralized
-                    </p>
-                    <p style={{ fontFamily: "var(--font-sans)", fontSize: "11px", color: "var(--color-text-secondary)", lineHeight: 1.5 }}>
+                    </h4>
+                    <p className="text-xs font-medium text-emerald-600/80 leading-relaxed">
                       Consensus engine localized drift to {selectedNodes.length} node(s). Automated reconciliation restored baseline state within 1.4s.
                     </p>
                   </div>

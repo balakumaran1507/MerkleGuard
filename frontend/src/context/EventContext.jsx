@@ -2,7 +2,18 @@ import React, { createContext, useContext, useState, useEffect } from "react"
 import { useWebSocket } from "../hooks/useWebSocket"
 import { client } from "../api/client"
 
-const EventContext = createContext(null)
+const defaultContext = {
+  isConnected: false,
+  lastEvent: null,
+  events: [],
+  nodeStatuses: {},
+  nodes: [],
+  stats: null,
+  refreshStats: async () => { },
+  refreshNodes: async () => { }
+}
+
+const EventContext = createContext(defaultContext)
 
 export function EventProvider({ children }) {
   const [nodeStatuses, setNodeStatuses] = useState({})
@@ -67,4 +78,4 @@ export function EventProvider({ children }) {
   )
 }
 
-export const useEvents = () => useContext(EventContext)
+export const useEvents = () => useContext(EventContext) || defaultContext

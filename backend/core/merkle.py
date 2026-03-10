@@ -174,6 +174,34 @@ def verify_merkle_proof(root: str, leaf_data: str, proof: List[Tuple[str, str]])
     return current_hash == root
 
 
+def tree_to_levels(root: MerkleNode) -> List[List[str]]:
+    """
+    Convert a Merkle tree to a levels array format.
+    Returns [[leaf_hashes...], [parent_hashes...], ..., [root_hash]]
+    """
+    if not root:
+        return []
+
+    levels_dict = {}
+
+    def collect_levels(node: MerkleNode):
+        if node is None:
+            return
+        if node.level not in levels_dict:
+            levels_dict[node.level] = []
+        levels_dict[node.level].append(node.hash)
+        if node.left:
+            collect_levels(node.left)
+        if node.right:
+            collect_levels(node.right)
+
+    collect_levels(root)
+
+    # Convert to list of lists, ordered from leaves to root
+    max_level = max(levels_dict.keys())
+    return [levels_dict.get(i, []) for i in range(max_level, -1, -1)]
+
+
 def diff_merkle_trees(tree_a: MerkleNode, tree_b: MerkleNode) -> List[int]:
     """
     O(log n) drift localization: returns leaf indices where trees differ.

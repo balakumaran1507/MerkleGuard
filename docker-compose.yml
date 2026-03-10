@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: merkleguard-backend
+    ports:
+      - "8288:8288"
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./backend:/app
+    restart: unless-stopped
+    networks:
+      - merkleguard-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: merkleguard-frontend
+    ports:
+      - "5288:5288"
+    environment:
+      - VITE_API_URL=http://backend:8288
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - merkleguard-network
+
+networks:
+  merkleguard-network:
+    driver: bridge

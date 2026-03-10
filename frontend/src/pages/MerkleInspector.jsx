@@ -6,8 +6,6 @@ import { PolicyCompare } from "../components/PolicyCompare"
 import { client } from "../api/client"
 import { AlertCircle, Info } from "lucide-react"
 
-const monoLabel = { fontFamily: "var(--font-mono)", fontSize: "9.5px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--color-text-muted)" }
-
 export function MerkleInspector() {
    const { nodes, nodeStatuses } = useEvents()
    const [selectedNodeId, setSelectedNodeId] = useState(null)
@@ -36,138 +34,129 @@ export function MerkleInspector() {
    const selectedNode = nodesWithUpdates.find(n => n.id === selectedNodeId)
 
    return (
-      <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+      <div className="flex flex-col gap-6">
 
          {/* Heading */}
          <div>
-            <h1 style={{ fontFamily: "var(--font-sans)", fontSize: "22px", fontWeight: 700, color: "var(--color-text-primary)", letterSpacing: "-0.03em", lineHeight: 1, marginBottom: "6px" }}>
+            <h1 className="text-2xl font-bold tracking-tight text-gray-900 mb-1">
                Merkle Inspector
             </h1>
-            <p style={{ ...monoLabel }}>Hierarchical cryptographic verification & drift localization</p>
+            <p className="text-sm font-medium text-gray-500">
+               Hierarchical cryptographic verification & drift localization
+            </p>
          </div>
 
          {/* Node pill selector */}
-         <div style={{ display: "flex", gap: "6px", overflowX: "auto", paddingBottom: "4px" }}>
+         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
             {nodesWithUpdates.map(node => {
                const isSel = selectedNodeId === node.id
-               const borderColor = node.status === "critical" ? "rgba(240,75,75,0.4)" : node.status === "drifted" ? "rgba(245,158,11,0.4)" : "var(--color-border-default)"
-               const color = node.status === "critical" ? "var(--color-status-crit)" : node.status === "drifted" ? "var(--color-status-warn)" : "var(--color-text-muted)"
+               const isCritical = node.status === "critical" || node.status === "compromised"
+               const isWarning = node.status === "drifted" || node.status === "warning"
+
+               const borderColor = isCritical ? "border-red-200" : isWarning ? "border-amber-200" : "border-gray-200"
+               const textColor = isCritical ? "text-red-600" : isWarning ? "text-amber-600" : "text-gray-500"
+               const bg = isCritical ? "bg-red-50" : isWarning ? "bg-amber-50" : "bg-white"
+
                return (
                   <button
                      key={node.id}
                      onClick={() => setSelectedNodeId(node.id)}
-                     style={{
-                        display: "inline-flex", alignItems: "center", gap: "5px",
-                        padding: "5px 12px", borderRadius: "6px", cursor: "pointer",
-                        fontFamily: "var(--font-mono)", fontSize: "10px", fontWeight: 700,
-                        letterSpacing: "0.04em", whiteSpace: "nowrap",
-                        background: isSel ? "var(--color-cyan-dim)" : "var(--color-bg-surface)",
-                        border: `1px solid ${isSel ? "rgba(0,210,255,0.3)" : borderColor}`,
-                        color: isSel ? "var(--color-cyan-500)" : color,
-                        transition: "all 0.15s",
-                     }}
+                     className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold tracking-widest uppercase whitespace-nowrap transition-all border ${isSel ? "bg-blue-50 border-blue-200 text-blue-600 ring-1 ring-blue-500/20" : `${bg} ${borderColor} ${textColor} hover:bg-gray-50`
+                        }`}
                   >
-                     {node.name.split("-").slice(0, 2).join("-")}
-                     {node.status !== "compliant" && <AlertCircle size={9} strokeWidth={2.5} />}
+                     {(node.name || node.hostname).split("-").slice(0, 2).join("-")}
+                     {(isCritical || isWarning) && <AlertCircle size={10} strokeWidth={2.5} />}
                   </button>
                )
             })}
          </div>
 
          {selectedNode && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }} className="animate-mg-fadeIn">
+            <div className="flex flex-col gap-4 animate-fade-in">
 
                {/* Info bar */}
-               <div
-                  className="mg-card"
-                  style={{ padding: "14px 20px", display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: "16px" }}
-               >
-                  <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+               <div className="card p-4 px-5 flex flex-wrap items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
                      <StatusBadge status={selectedNode.status} />
                      <div>
-                        <span style={{ ...monoLabel, display: "block", marginBottom: "2px" }}>Merkle Root</span>
-                        <span
-                           style={{
-                              fontFamily: "var(--font-mono)", fontSize: "11px", fontWeight: 700,
-                              color: selectedNode.status === "compliant"
-                                 ? "var(--color-cyan-500)"
-                                 : selectedNode.status === "critical"
-                                    ? "var(--color-status-crit)"
-                                    : "var(--color-status-warn)",
-                              letterSpacing: "0.03em",
-                           }}
-                        >
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 block mb-1">Merkle Root</span>
+                        <span className={`font-mono text-xs font-bold tracking-tight ${selectedNode.status === "compliant" || selectedNode.status === "secure" ? "text-emerald-600" :
+                              selectedNode.status === "critical" || selectedNode.status === "compromised" ? "text-red-600" : "text-amber-600"
+                           }`}>
                            {(selectedNode.current_merkle_root || selectedNode.merkle_root || "").substring(0, 32)}…
                         </span>
                      </div>
                   </div>
-                  <div style={{ display: "flex", gap: "24px" }}>
+                  <div className="flex gap-6">
                      {[
-                        { label: "Reconciliations", value: selectedNode.reconcile_count, color: "var(--color-cyan-500)" },
-                        { label: "Online Since", value: new Date(selectedNode.uptime_start).toLocaleDateString(), color: "var(--color-text-secondary)" },
+                        { label: "Reconciliations", value: selectedNode.reconcile_count, color: "text-blue-600" },
+                        { label: "Online Since", value: new Date(selectedNode.uptime_start).toLocaleDateString(), color: "text-gray-900" },
                      ].map(row => (
                         <div key={row.label}>
-                           <span style={{ ...monoLabel, display: "block", marginBottom: "2px" }}>{row.label}</span>
-                           <span style={{ fontFamily: "var(--font-mono)", fontSize: "13px", fontWeight: 700, color: row.color }}>{row.value}</span>
+                           <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 block mb-1">{row.label}</span>
+                           <span className={`font-mono text-sm font-bold ${row.color}`}>{row.value}</span>
                         </div>
                      ))}
                   </div>
                </div>
 
                {/* Merkle tree vis */}
-               <div className="mg-card" style={{ padding: "20px 24px" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
+               <div className="card p-6 min-h-[400px]">
+                  <div className="flex justify-between items-start mb-4">
                      <div>
-                        <span style={{ ...monoLabel }}>Merkle Graph Visualizer</span>
-                        <p style={{ fontFamily: "var(--font-sans)", fontSize: "11px", color: "var(--color-text-muted)", marginTop: "4px" }}>
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Merkle Graph Visualizer</span>
+                        <p className="text-xs font-medium text-gray-500 mt-1">
                            O(log n) traversal path for drift localization. Click nodes to inspect.
                         </p>
                      </div>
-                     <div style={{ display: "flex", gap: "14px" }}>
+                     <div className="flex gap-4">
                         {[
-                           { color: "var(--color-bg-elevated)", border: "var(--color-border-default)", label: "Verified" },
-                           { color: "var(--color-status-warn-dim)", border: "rgba(245,158,11,0.4)", label: "Affected Path", textColor: "var(--color-status-warn)" },
-                           { color: "var(--color-status-crit-dim)", border: "rgba(240,75,75,0.4)", label: "Drift Source", textColor: "var(--color-status-crit)" },
+                           { color: "bg-gray-100", border: "border-gray-200", label: "Verified", textColor: "text-gray-500" },
+                           { color: "bg-amber-100", border: "border-amber-200", label: "Affected Path", textColor: "text-amber-600" },
+                           { color: "bg-red-100", border: "border-red-200", label: "Drift Source", textColor: "text-red-600" },
                         ].map(item => (
-                           <div key={item.label} style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                              <div style={{ width: 9, height: 9, borderRadius: "3px", background: item.color, border: `1px solid ${item.border}` }} />
-                              <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", fontWeight: 600, letterSpacing: "0.06em", color: item.textColor || "var(--color-text-muted)" }}>
+                           <div key={item.label} className="flex items-center gap-1.5">
+                              <div className={`w-2.5 h-2.5 rounded-sm border ${item.color} ${item.border}`} />
+                              <span className={`text-[10px] font-bold uppercase tracking-widest ${item.textColor}`}>
                                  {item.label}
                               </span>
                            </div>
                         ))}
                      </div>
                   </div>
-                  <MerkleTreeD3 treeData={merkleData?.tree} driftIndices={merkleData?.drift_indices} onNodeClick={(d) => console.log("Node clicked", d)} />
+                  <MerkleTreeD3 treeData={merkleData} driftIndices={merkleData?.drifted_leaf_indices || []} onNodeClick={(d) => console.log("Node clicked", d)} />
                </div>
 
                {/* Policy + Metadata */}
-               <div style={{ display: "grid", gridTemplateColumns: "1fr 260px", gap: "16px" }}>
-                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                     <span style={{ ...monoLabel }}>Policy Reconstruction</span>
-                     <PolicyCompare policies={selectedNode.policy_state} driftedCategories={selectedNode.drifted_categories || []} />
+               <div className="grid grid-cols-1 lg:grid-cols-[1fr_260px] gap-4">
+                  <div className="flex flex-col gap-3">
+                     <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 pl-1">Policy Reconstruction</span>
+                     <div className="card bg-gray-50/50 p-0 border-transparent">
+                        <PolicyCompare policies={selectedNode.policy_state} driftedCategories={selectedNode.drifted_categories || []} />
+                     </div>
                   </div>
 
-                  <div className="mg-card" style={{ padding: "18px 20px" }}>
-                     <span style={{ ...monoLabel, display: "block", marginBottom: "14px" }}>Verification Metadata</span>
-                     <div style={{ display: "flex", gap: "10px", alignItems: "flex-start", marginBottom: "14px" }}>
-                        <div style={{ width: 28, height: 28, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "6px", background: "var(--color-cyan-dim)", border: "1px solid rgba(0,210,255,0.2)", color: "var(--color-cyan-500)" }}>
-                           <Info size={13} strokeWidth={2} />
+                  <div className="card p-5">
+                     <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 block mb-4">Verification Metadata</span>
+
+                     <div className="flex gap-3 items-start mb-4">
+                        <div className="w-8 h-8 shrink-0 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600 border border-blue-100 shadow-sm">
+                           <Info size={16} strokeWidth={2.5} />
                         </div>
-                        <p style={{ fontFamily: "var(--font-sans)", fontSize: "11px", color: "var(--color-text-muted)", lineHeight: 1.5 }}>
+                        <p className="text-xs font-medium text-gray-500 leading-relaxed pt-1">
                            Traversed {merkleData?.tree?.levels?.length ?? "—"} hierarchy levels to localize drift.
                         </p>
                      </div>
 
-                     <div style={{ borderTop: "1px solid var(--color-border-default)", paddingTop: "12px", display: "flex", flexDirection: "column", gap: "10px" }}>
+                     <div className="border-t border-gray-100 pt-4 flex flex-col gap-3">
                         {[
                            { label: "ALGORITHM", value: "SHA-256" },
                            { label: "LEAVES", value: "64" },
                            { label: "DEPTH", value: "6" },
                         ].map(row => (
-                           <div key={row.label} style={{ display: "flex", justifyContent: "space-between" }}>
-                              <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", fontWeight: 600, letterSpacing: "0.1em", color: "var(--color-text-muted)" }}>{row.label}</span>
-                              <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", fontWeight: 700, color: "var(--color-text-secondary)" }}>{row.value}</span>
+                           <div key={row.label} className="flex justify-between items-center">
+                              <span className="font-mono text-[10px] font-semibold tracking-widest text-gray-400">{row.label}</span>
+                              <span className="font-mono text-xs font-bold text-gray-900">{row.value}</span>
                            </div>
                         ))}
                      </div>

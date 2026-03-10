@@ -2,66 +2,42 @@ import React from "react"
 
 const STATUS = {
   compliant: {
-    dot: "var(--color-status-ok)",
-    glow: "rgba(16,212,140,0.5)",
-    text: "var(--color-status-ok)",
-    bg: "var(--color-status-ok-dim)",
-    border: "rgba(16,212,140,0.2)",
+    dot: "bg-emerald-500",
+    glow: "shadow-[0_0_8px_rgba(16,185,129,0.5)]",
+    text: "text-emerald-700",
+    bg: "bg-emerald-50",
+    border: "border-emerald-200",
     label: "Compliant",
     pulse: false,
   },
   drifted: {
-    dot: "var(--color-status-warn)",
-    glow: "rgba(245,158,11,0.5)",
-    text: "var(--color-status-warn)",
-    bg: "var(--color-status-warn-dim)",
-    border: "rgba(245,158,11,0.25)",
+    dot: "bg-amber-500",
+    glow: "shadow-[0_0_8px_rgba(245,158,11,0.5)]",
+    text: "text-amber-700",
+    bg: "bg-amber-50",
+    border: "border-amber-200",
     label: "Drifted",
     pulse: true,
   },
   critical: {
-    dot: "var(--color-status-crit)",
-    glow: "rgba(240,75,75,0.5)",
-    text: "var(--color-status-crit)",
-    bg: "var(--color-status-crit-dim)",
-    border: "rgba(240,75,75,0.25)",
+    dot: "bg-red-500",
+    glow: "shadow-[0_0_8px_rgba(239,68,68,0.5)]",
+    text: "text-red-700",
+    bg: "bg-red-50",
+    border: "border-red-200",
     label: "Critical",
     pulse: true,
   },
 }
 
 export function StatusBadge({ status }) {
-  const c = STATUS[status] || STATUS.compliant
+  // Normalize status names from old versions to new versions if needed
+  const normalizedStatus = status === 'secure' ? 'compliant' : status === 'warning' ? 'drifted' : status === 'compromised' ? 'critical' : status;
+  const c = STATUS[normalizedStatus] || STATUS.compliant
 
   return (
-    <div
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: "5px",
-        padding: "2px 8px",
-        borderRadius: "4px",
-        fontSize: "10px",
-        fontWeight: 600,
-        fontFamily: "var(--font-mono)",
-        letterSpacing: "0.06em",
-        background: c.bg,
-        border: `1px solid ${c.border}`,
-        color: c.text,
-      }}
-    >
-      <span
-        className={c.pulse ? "animate-mg-pulse" : ""}
-        style={{
-          display: "block",
-          width: "5px",
-          height: "5px",
-          borderRadius: "50%",
-          background: c.dot,
-          boxShadow: `0 0 5px ${c.glow}`,
-          flexShrink: 0,
-        }}
-      />
+    <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md font-mono text-[10px] font-bold tracking-widest uppercase border ${c.bg} ${c.border} ${c.text}`}>
+      <span className={`block w-1.5 h-1.5 rounded-full shrink-0 ${c.dot} ${c.glow} ${c.pulse ? "animate-pulse" : ""}`} />
       {c.label}
     </div>
   )

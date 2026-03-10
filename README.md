@@ -21,16 +21,31 @@ These are hashed into a Merkle Tree. If even a single bit of policy drifts (due 
 ## 🛠️ Getting Started
 
 ### Prerequisites
-- Python 3.9+
-- Node.js 18+
+- **Docker Setup (Recommended):** Docker and Docker Compose
+- **Manual Setup:** Python 3.9+ and Node.js 18+
 
-### Quick Start (Recommended)
-You can launch both the frontend and backend servers simultaneously using the provided script:
+### Quick Start with Docker (Recommended)
+Run both frontend and backend with a single command:
+```bash
+docker-compose up --build
+```
+The dashboard will be available at `http://localhost:5288`.
+The backend API runs on `http://localhost:8288`.
+
+To stop the containers:
+```bash
+docker-compose down
+```
+
+---
+
+### Alternative: Quick Start Script
+You can launch both servers using the provided script:
 ```bash
 chmod +x start.sh
 ./start.sh
 ```
-The dashboard will be available at `http://localhost:5173`.
+The dashboard will be available at `http://localhost:5288`.
 
 ---
 
@@ -39,11 +54,12 @@ The dashboard will be available at `http://localhost:5173`.
 #### 1. Backend Setup
 ```bash
 cd backend
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
-source venv/bin/activate # if using virtual environment
 python main.py
 ```
-The API will run on `http://localhost:8001`.
+The API will run on `http://localhost:8288`.
 
 #### 2. Frontend Setup
 ```bash
@@ -51,7 +67,7 @@ cd frontend
 npm install
 npm run dev
 ```
-The dashboard will be available at `http://localhost:5173`.
+The dashboard will be available at `http://localhost:5288`.
 
 ## 📈 Key Features
 - **Live Dashboard:** Real-time visibility into global compliance posture.

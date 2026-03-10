@@ -1,218 +1,109 @@
-import React from "react"
-import { NavLink } from "react-router-dom"
+import React from 'react';
+import { NavLink } from 'react-router-dom';
+import { clsx } from 'clsx';
 import {
-  LayoutDashboard,
-  Server,
-  GitFork,
-  Swords,
-  ScrollText,
-  BarChart3,
-  Wifi,
-  ShieldHalf,
-  ChevronLeft,
-  ChevronRight
-} from "lucide-react"
-import { clsx } from "clsx"
+    LayoutDashboard, Server, Zap, Award, GitFork, Wifi,
+    BarChart3, Swords, ShieldHalf, ScrollText, FileText
+} from 'lucide-react';
 
-const NAV_ITEMS = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, group: "OVERVIEW" },
-  { to: "/nodes", label: "Node Fleet", icon: Server, group: "OVERVIEW" },
-  { to: "/merkle", label: "Merkle Inspector", icon: GitFork, group: "ANALYSIS" },
-  { to: "/analysis", label: "Network Analysis", icon: Wifi, group: "ANALYSIS" },
-  { to: "/analytics", label: "Analytics", icon: BarChart3, group: "ANALYSIS" },
-  { to: "/simulator", label: "Attack Simulator", icon: Swords, group: "RESPONSE" },
-  { to: "/threat-model", label: "Threat Model", icon: ShieldHalf, group: "RESPONSE" },
-  { to: "/timeline", label: "Timeline & Audit", icon: ScrollText, group: "RESPONSE" },
-]
+const ROUTES = [
+    { to: "/dashboard", label: "Dashboard", key: "D", icon: LayoutDashboard },
+    { to: "/nodes", label: "Node Fleet", key: "N", icon: Server },
+    { to: "/demo-live", label: "Live Demo", key: "L", icon: Zap },
+    { to: "/showcase", label: "Showcase", key: "S", icon: Award },
+    { to: "/merkle", label: "Merkle Inspector", key: "M", icon: GitFork },
+    { to: "/analysis", label: "Network Analysis", key: "A", icon: Wifi },
+    { to: "/analytics", label: "Analytics", key: "T", icon: BarChart3 },
+    { to: "/simulator", label: "Attack Simulator", key: "K", icon: Swords },
+    { to: "/threat-model", label: "Threat Model", key: "H", icon: ShieldHalf },
+    { to: "/timeline", label: "Timeline & Audit", key: "I", icon: ScrollText },
+    { to: "/compliance", label: "Compliance Reports", key: "C", icon: FileText },
+];
 
-const GROUPS = ["OVERVIEW", "ANALYSIS", "RESPONSE"]
-
-export function Sidebar({ collapsed, setCollapsed }) {
-  return (
-    <aside
-      className={clsx(
-        "flex flex-col h-screen transition-all duration-300 relative flex-shrink-0",
-        collapsed ? "w-[56px]" : "w-[220px]"
-      )}
-      style={{
-        background: "var(--color-bg-surface)",
-        borderRight: "1px solid var(--color-border-default)",
-      }}
-    >
-      {/* ── Brand wordmark ── */}
-      <div
-        className="flex items-center h-14 px-4 flex-shrink-0"
-        style={{ borderBottom: "1px solid var(--color-border-default)" }}
-      >
-        {collapsed ? (
-          <div
-            className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0"
-            style={{
-              background: "var(--color-cyan-dim)",
-              border: "1px solid rgba(0,210,255,0.2)",
-            }}
-          >
-            <span
-              style={{
-                fontFamily: "var(--font-mono)",
-                fontSize: "11px",
-                fontWeight: 700,
-                color: "var(--color-cyan-500)",
-                letterSpacing: "-0.03em",
-              }}
-            >
-              MG
-            </span>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-0.5 min-w-0">
-            <div className="flex items-baseline gap-1.5">
-              <span
-                style={{
-                  fontFamily: "var(--font-sans)",
-                  fontSize: "15px",
-                  fontWeight: 700,
-                  color: "var(--color-text-primary)",
-                  letterSpacing: "-0.03em",
-                  lineHeight: 1,
-                }}
-              >
-                Merkle
-              </span>
-              <span
-                style={{
-                  fontFamily: "var(--font-sans)",
-                  fontSize: "15px",
-                  fontWeight: 700,
-                  color: "var(--color-cyan-500)",
-                  letterSpacing: "-0.03em",
-                  lineHeight: 1,
-                }}
-              >
-                Guard
-              </span>
+export function Sidebar({ collapsed, onToggle }) {
+    return (
+        <aside className={clsx(
+            "fixed left-0 top-0 h-screen bg-white border-r border-gray-200 transition-all duration-300 flex flex-col",
+            collapsed ? "w-16" : "w-64"
+        )}>
+            {/* Header */}
+            <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200 shrink-0">
+                {!collapsed ? (
+                    <>
+                        <span className="font-bold text-gray-900 text-sm">MerkleGuard</span>
+                        <button
+                            onClick={onToggle}
+                            className="w-8 h-8 rounded hover:bg-gray-100 flex items-center justify-center text-gray-600 transition-colors"
+                            aria-label="Collapse sidebar"
+                        >
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M10 4l-4 4 4 4" />
+                            </svg>
+                        </button>
+                    </>
+                ) : (
+                    <button
+                        onClick={onToggle}
+                        className="w-8 h-8 rounded hover:bg-gray-100 flex items-center justify-center text-gray-600 transition-colors mx-auto"
+                        aria-label="Expand sidebar"
+                    >
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M6 4l4 4-4 4" />
+                        </svg>
+                    </button>
+                )}
             </div>
-            <span
-              style={{
-                fontFamily: "var(--font-mono)",
-                fontSize: "9px",
-                fontWeight: 500,
-                color: "var(--color-text-muted)",
-                letterSpacing: "0.12em",
-                textTransform: "uppercase",
-              }}
-            >
-              Zero-Trust Engine
-            </span>
-          </div>
-        )}
-      </div>
 
-      {/* ── Navigation ── */}
-      <nav className="flex-1 overflow-y-auto py-3 px-2" style={{ gap: "0" }}>
-        {GROUPS.map((group) => {
-          const items = NAV_ITEMS.filter((i) => i.group === group)
-          return (
-            <div key={group} className="mb-4">
-              {!collapsed && (
-                <div
-                  className="px-2 mb-1.5"
-                  style={{
-                    fontFamily: "var(--font-mono)",
-                    fontSize: "9px",
-                    fontWeight: 600,
-                    letterSpacing: "0.12em",
-                    color: "var(--color-text-dim)",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  {group}
+            {/* Navigation */}
+            <nav className="flex-1 overflow-y-auto py-4">
+                <div className="space-y-1 px-2">
+                    {ROUTES.map(route => (
+                        <NavLink
+                            key={route.to}
+                            to={route.to}
+                            className={({ isActive }) => clsx(
+                                "flex items-center gap-3 px-3 py-2 rounded transition-colors",
+                                isActive
+                                    ? "bg-gray-900 text-white"
+                                    : "text-gray-600 hover:bg-gray-100"
+                            )}
+                            title={collapsed ? route.label : undefined}
+                        >
+                            {({ isActive }) => (
+                                <>
+                                    {collapsed ? (
+                                        <route.icon size={18} strokeWidth={2} className="shrink-0" />
+                                    ) : (
+                                        <>
+                                            <span className={clsx(
+                                                "w-6 h-6 flex items-center justify-center rounded text-xs font-bold shrink-0",
+                                                isActive ? "bg-white/20" : "bg-gray-200"
+                                            )}>
+                                                {route.key}
+                                            </span>
+                                            <span className="text-sm font-medium truncate">{route.label}</span>
+                                        </>
+                                    )}
+                                </>
+                            )}
+                        </NavLink>
+                    ))}
                 </div>
-              )}
-              {items.map((item) => (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  title={collapsed ? item.label : undefined}
-                  className={({ isActive }) =>
-                    clsx(
-                      "mg-nav-item mb-0.5",
-                      isActive && "active",
-                      collapsed && "justify-center px-2"
-                    )
-                  }
-                >
-                  <item.icon
-                    size={15}
-                    strokeWidth={1.75}
-                    style={{ flexShrink: 0 }}
-                  />
-                  {!collapsed && (
-                    <span style={{ fontSize: "12.5px", fontWeight: 500 }}>
-                      {item.label}
-                    </span>
-                  )}
-                </NavLink>
-              ))}
+            </nav>
+
+            {/* Footer Status */}
+            <div className="h-14 border-t border-gray-200 flex items-center px-4 shrink-0">
+                {collapsed ? (
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 mx-auto" />
+                ) : (
+                    <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                            Operational
+                        </span>
+                    </div>
+                )}
             </div>
-          )
-        })}
-      </nav>
-
-      {/* ── Footer ── */}
-      <div
-        className="flex-shrink-0 px-3 py-3"
-        style={{ borderTop: "1px solid var(--color-border-default)" }}
-      >
-        {!collapsed && (
-          <div className="flex flex-col gap-0.5 px-1">
-            <span
-              style={{
-                fontFamily: "var(--font-mono)",
-                fontSize: "9px",
-                color: "var(--color-text-dim)",
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-              }}
-            >
-              Runtime
-            </span>
-            <span
-              style={{
-                fontFamily: "var(--font-mono)",
-                fontSize: "10px",
-                fontWeight: 600,
-                color: "var(--color-cyan-500)",
-                opacity: 0.7,
-              }}
-            >
-              v2.4.1-stable
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* ── Collapse toggle ── */}
-      <button
-        onClick={() => setCollapsed(!collapsed)}
-        className="absolute -right-3 top-[58px] w-6 h-6 flex items-center justify-center rounded-full cursor-pointer transition-all duration-150"
-        style={{
-          background: "var(--color-bg-elevated)",
-          border: "1px solid var(--color-border-strong)",
-          color: "var(--color-text-muted)",
-          zIndex: 50,
-        }}
-        onMouseEnter={e => {
-          e.currentTarget.style.borderColor = "var(--color-cyan-500)"
-          e.currentTarget.style.color = "var(--color-cyan-500)"
-        }}
-        onMouseLeave={e => {
-          e.currentTarget.style.borderColor = "var(--color-border-strong)"
-          e.currentTarget.style.color = "var(--color-text-muted)"
-        }}
-      >
-        {collapsed ? <ChevronRight size={11} /> : <ChevronLeft size={11} />}
-      </button>
-    </aside>
-  )
+        </aside>
+    );
 }

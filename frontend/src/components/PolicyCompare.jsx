@@ -14,7 +14,7 @@ export function PolicyCompare({ policies, driftedCategories = [] }) {
   if (!policies) return null
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+    <div className="flex flex-col gap-2">
       {Object.entries(CATEGORIES).map(([key, config]) => {
         const policy = policies[key]
         const Icon = config.icon
@@ -24,40 +24,34 @@ export function PolicyCompare({ policies, driftedCategories = [] }) {
         return (
           <div
             key={key}
-            style={{
-              display: "flex", alignItems: "center", gap: "12px",
-              padding: "10px 14px", borderRadius: "7px",
-              background: isOk ? "var(--color-bg-elevated)" : "var(--color-status-crit-dim)",
-              border: `1px solid ${isOk ? "var(--color-border-default)" : "rgba(240,75,75,0.2)"}`,
-              transition: "border-color 0.15s",
-            }}
+            className={`flex items-center gap-3 p-3 rounded-md border transition-all ${isOk
+                ? "bg-white border-gray-100 shadow-sm"
+                : "bg-red-50/50 border-red-100"
+              }`}
           >
             {/* Icon */}
             <div
-              style={{
-                width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center",
-                borderRadius: "7px", flexShrink: 0,
-                background: isOk ? "var(--color-status-ok-dim)" : "var(--color-status-crit-dim)",
-                border: isOk ? "1px solid rgba(16,212,140,0.2)" : "1px solid rgba(240,75,75,0.2)",
-                color: isOk ? "var(--color-status-ok)" : "var(--color-status-crit)",
-              }}
+              className={`w-8 h-8 flex items-center justify-center rounded-md shrink-0 border ${isOk
+                  ? "bg-emerald-50 border-emerald-100 text-emerald-600"
+                  : "bg-red-50 border-red-100 text-red-500"
+                }`}
             >
-              <Icon size={13} strokeWidth={1.75} />
+              <Icon size={16} strokeWidth={2} />
             </div>
 
             {/* Label + hash */}
-            <div style={{ flex: 1, minWidth: 0 }}>
+            <div className="flex-1 min-w-0">
               <div
-                style={{ fontFamily: "var(--font-mono)", fontSize: "9px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--color-text-muted)", marginBottom: "3px" }}
+                className="font-bold text-[10px] tracking-widest uppercase text-gray-500 mb-1"
               >
                 {config.label}
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--color-text-secondary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "150px" }}>
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-[10px] font-medium text-gray-600 truncate max-w-[120px] lg:max-w-[160px]">
                   {policy?.config_hash ? policy.config_hash.substring(0, 18) + "…" : "0x000000…"}
                 </span>
-                <div style={{ width: 1, height: 14, background: "var(--color-border-default)", flexShrink: 0 }} />
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--color-text-muted)", flexShrink: 0 }}>
+                <div className="w-px h-3 bg-gray-200 shrink-0" />
+                <span className="font-mono text-[10px] font-medium text-gray-400 shrink-0">
                   {policy?.rule_count ?? "—"} rules
                 </span>
               </div>
@@ -65,15 +59,12 @@ export function PolicyCompare({ policies, driftedCategories = [] }) {
 
             {/* Status icon */}
             <div
-              style={{
-                width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center",
-                borderRadius: "50%", flexShrink: 0,
-                background: isOk ? "var(--color-status-ok-dim)" : "var(--color-status-crit-dim)",
-                border: isOk ? "1px solid rgba(16,212,140,0.3)" : "1px solid rgba(240,75,75,0.3)",
-                color: isOk ? "var(--color-status-ok)" : "var(--color-status-crit)",
-              }}
+              className={`w-6 h-6 flex items-center justify-center rounded-full shrink-0 border ${isOk
+                  ? "bg-emerald-50 border-emerald-100 text-emerald-600"
+                  : "bg-red-50 border-red-100 text-red-500"
+                }`}
             >
-              {isOk ? <Check size={12} strokeWidth={2.5} /> : <X size={12} strokeWidth={2.5} />}
+              {isOk ? <Check size={14} strokeWidth={2.5} /> : <X size={14} strokeWidth={2.5} />}
             </div>
           </div>
         )

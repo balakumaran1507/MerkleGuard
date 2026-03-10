@@ -3,30 +3,37 @@ import { useApi } from "../hooks/useApi"
 import {
    LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from "recharts"
-
-const monoLabel = { fontFamily: "var(--font-mono)", fontSize: "9.5px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--color-text-muted)" }
-
-const tooltipStyle = {
-   contentStyle: { backgroundColor: "var(--color-bg-elevated)", border: "1px solid var(--color-border-default)", borderRadius: "8px", fontSize: "11px", fontFamily: "'Geist Mono', monospace" },
-   itemStyle: { color: "var(--color-text-secondary)" },
-   labelStyle: { color: "var(--color-text-muted)", fontSize: "10px" },
-}
+import { Activity } from "lucide-react"
 
 function RangeSlider({ label, value, min, max, onChange }) {
    return (
-      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-         <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <span style={{ fontFamily: "var(--font-sans)", fontSize: "12px", fontWeight: 500, color: "var(--color-text-secondary)" }}>{label}</span>
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", fontWeight: 700, color: "var(--color-cyan-500)" }}>{value}</span>
+      <div className="flex flex-col gap-2">
+         <div className="flex justify-between items-center">
+            <span className="text-sm font-semibold text-gray-700">{label}</span>
+            <span className="font-mono text-sm font-bold text-blue-600">{value}</span>
          </div>
          <input
             type="range" min={min} max={max} value={value}
             onChange={e => onChange(parseInt(e.target.value))}
-            style={{ width: "100%", height: "3px", accentColor: "var(--color-cyan-500)", cursor: "pointer" }}
+            className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
          />
       </div>
    )
 }
+
+const CustomTooltip = ({ active, payload, label }) => {
+   if (active && payload && payload.length) {
+      return (
+         <div className="bg-white border border-gray-100 p-3 rounded-lg shadow-sm">
+            <p className="text-[10px] font-bold tracking-widest uppercase text-gray-400 mb-1">{`Nodes: ${label}`}</p>
+            <p className="text-sm font-mono font-bold text-blue-600">
+               {`${payload[0].value} Messages`}
+            </p>
+         </div>
+      );
+   }
+   return null;
+};
 
 export function NetworkAnalysis() {
    const [n, setN] = useState(16)
@@ -46,121 +53,112 @@ export function NetworkAnalysis() {
    const projections = [
       { label: "Messages / Round", value: n * k, suffix: "" },
       { label: "Bandwidth Overhead", value: calculateBandwidth(), suffix: "" },
-      { label: "Detection Probability", value: detectionProb.toFixed(2), suffix: "%" },
+      { label: "Detection Probability", value: detectionProb.toFixed(2), suffix: "%", highlight: true },
       { label: "Max Compromised (BFT)", value: Math.floor(n / 3), suffix: "" },
    ]
 
    const tableHeaders = ["Nodes", "k", "Messages", "Bandwidth", "Det. Prob", "BFT Limit"]
 
    return (
-      <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+      <div className="flex flex-col gap-6">
 
          {/* Heading */}
          <div>
-            <h1 style={{ fontFamily: "var(--font-sans)", fontSize: "22px", fontWeight: 700, color: "var(--color-text-primary)", letterSpacing: "-0.03em", lineHeight: 1, marginBottom: "6px" }}>
+            <h1 className="text-2xl font-bold tracking-tight text-gray-900 mb-1">
                Network Analysis
             </h1>
-            <p style={{ ...monoLabel }}>Gossip protocol scalability and communication overhead</p>
+            <p className="text-sm font-medium text-gray-500">
+               Gossip protocol scalability and communication overhead
+            </p>
          </div>
 
-         <div style={{ display: "grid", gridTemplateColumns: "260px 1fr", gap: "16px" }}>
+         <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
 
             {/* Left: Controls + Projections */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            <div className="flex flex-col gap-6">
 
                {/* Sliders */}
-               <div className="mg-card" style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: "20px" }}>
-                  <span style={{ ...monoLabel }}>Protocol Parameters</span>
+               <div className="card p-6 flex flex-col gap-6">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Protocol Parameters</span>
                   <RangeSlider label="Nodes (n)" value={n} min={2} max={1000} onChange={setN} />
                   <RangeSlider label="Peers per round (k)" value={k} min={1} max={10} onChange={setK} />
                   <RangeSlider label="Rounds" value={rounds} min={1} max={10} onChange={setRounds} />
                </div>
 
                {/* Projections */}
-               <div
-                  className="mg-card"
-                  style={{
-                     padding: "20px 24px", display: "flex", flexDirection: "column", gap: "0",
-                     background: "var(--color-cyan-dim)",
-                     borderColor: "rgba(0,210,255,0.18)",
-                  }}
-               >
-                  <span style={{ ...monoLabel, display: "block", marginBottom: "14px", color: "var(--color-cyan-400)" }}>
-                     Real-time Projections
+               <div className="card p-6 border-blue-100 bg-blue-50/50 flex flex-col gap-4">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-blue-500 flex items-center gap-1.5">
+                     <Activity size={14} /> Real-time Projections
                   </span>
-                  {projections.map((item, i) => (
-                     <div
-                        key={i}
-                        style={{
-                           display: "flex", justifyContent: "space-between", alignItems: "center",
-                           padding: "10px 0",
-                           borderBottom: i < projections.length - 1 ? "1px solid rgba(0,210,255,0.1)" : "none",
-                        }}
-                     >
-                        <span style={{ fontFamily: "var(--font-sans)", fontSize: "11px", color: "var(--color-text-secondary)" }}>{item.label}</span>
-                        <span style={{ fontFamily: "var(--font-mono)", fontSize: "13px", fontWeight: 700, color: "var(--color-cyan-500)" }}>
-                           {item.value}{item.suffix}
-                        </span>
-                     </div>
-                  ))}
+                  <div className="flex flex-col gap-3">
+                     {projections.map((item, i) => (
+                        <div
+                           key={i}
+                           className={`flex justify-between items-center pb-3 ${i < projections.length - 1 ? "border-b border-blue-100/50" : ""}`}
+                        >
+                           <span className="text-xs font-semibold text-gray-600">{item.label}</span>
+                           <span className={`font-mono text-sm font-bold ${item.highlight ? "text-emerald-600" : "text-blue-700"}`}>
+                              {item.value}{item.suffix}
+                           </span>
+                        </div>
+                     ))}
+                  </div>
                </div>
             </div>
 
             {/* Right: Table + Chart */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            <div className="flex flex-col gap-6">
 
                {/* Scalability table */}
-               <div className="mg-card" style={{ overflow: "hidden" }}>
-                  <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--color-border-default)", background: "var(--color-bg-elevated)" }}>
-                     <span style={{ ...monoLabel }}>Scalability Analysis</span>
+               <div className="card overflow-hidden">
+                  <div className="px-5 py-3 border-b border-gray-100 bg-gray-50/50">
+                     <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Scalability Analysis</span>
                   </div>
-                  <div style={{ overflowX: "auto" }}>
-                     <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                  <div className="overflow-x-auto">
+                     <table className="w-full text-left border-collapse">
                         <thead>
-                           <tr style={{ borderBottom: "1px solid var(--color-border-default)" }}>
+                           <tr className="border-b border-gray-100 bg-gray-50/30">
                               {tableHeaders.map(th => (
-                                 <th key={th} style={{ padding: "10px 16px", textAlign: "left", fontFamily: "var(--font-mono)", fontSize: "9px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--color-text-muted)", whiteSpace: "nowrap" }}>
+                                 <th key={th} className="px-5 py-3 text-[10px] font-bold tracking-widest uppercase text-gray-400 whitespace-nowrap">
                                     {th}
                                  </th>
                               ))}
                            </tr>
                         </thead>
-                        <tbody>
+                        <tbody className="divide-y divide-gray-50">
                            {(scalabilityData?.table || []).map((row, i) => (
-                              <tr
-                                 key={i}
-                                 style={{ borderBottom: "1px solid var(--color-border-subtle)", transition: "background 0.1s" }}
-                                 onMouseEnter={e => e.currentTarget.style.background = "var(--color-bg-elevated)"}
-                                 onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                              >
-                                 <td style={{ padding: "9px 16px", fontFamily: "var(--font-mono)", fontSize: "11px", fontWeight: 700, color: "var(--color-text-primary)" }}>{row.nodes}</td>
-                                 <td style={{ padding: "9px 16px", fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--color-text-muted)" }}>{row.k_peers}</td>
-                                 <td style={{ padding: "9px 16px", fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--color-text-secondary)" }}>{row.messages_per_round}</td>
-                                 <td style={{ padding: "9px 16px", fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--color-text-secondary)" }}>{row.bandwidth_human}</td>
-                                 <td style={{ padding: "9px 16px" }}>
-                                    <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", fontWeight: 700, color: "var(--color-status-ok)" }}>
+                              <tr key={i} className="hover:bg-gray-50/50 transition-colors">
+                                 <td className="px-5 py-3 font-mono text-xs font-bold text-gray-900">{row.nodes}</td>
+                                 <td className="px-5 py-3 font-mono text-xs text-gray-500">{row.k_peers}</td>
+                                 <td className="px-5 py-3 font-mono text-xs font-semibold text-blue-600">{row.messages_per_round}</td>
+                                 <td className="px-5 py-3 font-mono text-xs text-gray-600">{row.bandwidth_human}</td>
+                                 <td className="px-5 py-3">
+                                    <span className="font-mono text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">
                                        {(row.detection_probability * 100).toFixed(1)}%
                                     </span>
                                  </td>
-                                 <td style={{ padding: "9px 16px", fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--color-text-muted)" }}>{row.max_compromised_f}</td>
+                                 <td className="px-5 py-3 font-mono text-xs text-gray-400">{row.max_compromised_f}</td>
                               </tr>
                            ))}
+                           {!(scalabilityData?.table) && (
+                              <tr><td colSpan={6} className="px-5 py-10 text-center text-sm text-gray-400">Loading analysis data...</td></tr>
+                           )}
                         </tbody>
                      </table>
                   </div>
                </div>
 
                {/* Chart */}
-               <div className="mg-card" style={{ padding: "20px 24px" }}>
-                  <span style={{ ...monoLabel, display: "block", marginBottom: "16px" }}>Messages vs Network Size</span>
-                  <div style={{ height: 200 }}>
+               <div className="card p-6">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-6 block">Messages vs Network Size</span>
+                  <div className="h-[240px] w-full">
                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={scalabilityData?.table || []}>
-                           <CartesianGrid strokeDasharray="2 4" stroke="rgba(255,255,255,0.04)" vertical={false} />
-                           <XAxis dataKey="nodes" stroke="var(--color-text-dim)" fontSize={10} axisLine={false} tickLine={false} fontFamily="'Geist Mono', monospace" />
-                           <YAxis stroke="var(--color-text-dim)" fontSize={10} axisLine={false} tickLine={false} fontFamily="'Geist Mono', monospace" />
-                           <Tooltip {...tooltipStyle} />
-                           <Line type="monotone" dataKey="messages_per_round" stroke="var(--color-cyan-500)" strokeWidth={2} dot={false} />
+                        <LineChart data={scalabilityData?.table || []} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                           <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
+                           <XAxis dataKey="nodes" stroke="#9ca3af" fontSize={11} axisLine={false} tickLine={false} tickMargin={10} fontFamily="Geist Mono" />
+                           <YAxis stroke="#9ca3af" fontSize={11} axisLine={false} tickLine={false} tickMargin={10} fontFamily="Geist Mono" />
+                           <Tooltip content={<CustomTooltip />} />
+                           <Line type="monotone" dataKey="messages_per_round" stroke="#2563eb" strokeWidth={3} dot={{ r: 3, fill: '#2563eb', strokeWidth: 0 }} activeDot={{ r: 5, strokeWidth: 0 }} />
                         </LineChart>
                      </ResponsiveContainer>
                   </div>

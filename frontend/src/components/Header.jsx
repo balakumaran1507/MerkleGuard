@@ -26,7 +26,7 @@ export function Header() {
   const handleReconcile = async () => {
     setReconciling(true)
     try {
-      await client.post("/api/reconcile")
+      await client.post("/api/reconcile", {})
       checkBaseline()
     } catch (err) {
       console.error(err)
@@ -41,8 +41,7 @@ export function Header() {
     <header
       className="flex items-center justify-between px-6 h-14 flex-shrink-0"
       style={{
-        background: "var(--color-bg-glass)",
-        backdropFilter: "blur(12px)",
+        background: "var(--color-bg-surface)",
         borderBottom: "1px solid var(--color-border-default)",
         position: "sticky",
         top: 0,

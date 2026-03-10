@@ -6,24 +6,44 @@ import {
 import { StatCard } from "../components/StatCard"
 import { Clock, CheckCircle2, AlertTriangle, Zap, Share2 } from "lucide-react"
 
-const monoLabel = { fontFamily: "var(--font-mono)", fontSize: "9.5px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--color-text-muted)" }
+const CustomTooltip = ({ active, payload, label }) => {
+   if (active && payload && payload.length) {
+      return (
+         <div className="bg-white border border-gray-100 p-3 rounded-lg shadow-sm">
+            <p className="text-[10px] font-bold tracking-widest uppercase text-gray-400 mb-1">{label}</p>
+            <p className="text-sm font-mono font-bold text-gray-900">
+               {`${payload[0].value} Drifts`}
+            </p>
+         </div>
+      );
+   }
+   return null;
+};
 
-const tooltipStyle = {
-   contentStyle: { backgroundColor: "var(--color-bg-elevated)", border: "1px solid var(--color-border-default)", borderRadius: "8px", fontSize: "11px", fontFamily: "'Geist Mono', monospace" },
-   itemStyle: { color: "var(--color-text-secondary)" },
-   labelStyle: { color: "var(--color-text-muted)", fontSize: "10px" },
-}
+const CustomBarTooltip = ({ active, payload }) => {
+   if (active && payload && payload.length) {
+      return (
+         <div className="bg-white border border-gray-100 p-3 rounded-lg shadow-sm">
+            <p className="text-[10px] font-bold tracking-widest uppercase text-gray-400 mb-1">{payload[0].payload.name}</p>
+            <p className="text-sm font-mono font-bold text-gray-900">
+               {`${payload[0].value} Comparisons`}
+            </p>
+         </div>
+      );
+   }
+   return null;
+};
 
 export function Analytics() {
    const { data: metrics } = useApi("/api/metrics")
    const m = metrics || {}
 
    const stats = [
-      { label: "MTTD", value: `${(m.mean_time_to_detection_ms / 1000 || 0).toFixed(2)}s`, sub: "Mean Time to Detection", icon: Clock, color: "cyan" },
-      { label: "MTTR", value: `${(m.mean_time_to_reconciliation_ms / 1000 || 0).toFixed(2)}s`, sub: "Mean Time to Reconcile", icon: Zap, color: "purple" },
-      { label: "FPR", value: `${(m.false_positive_rate || 0).toFixed(2)}%`, sub: "False Positive Rate", icon: CheckCircle2, color: "green" },
-      { label: "Localization", value: `${(m.drift_localization_accuracy || 0).toFixed(1)}%`, sub: "Detection Accuracy", icon: AlertTriangle, color: "amber" },
-      { label: "Consensus", value: `${(m.consensus_agreement_rate || 0).toFixed(1)}%`, sub: "Agreement Success", icon: Share2, color: "white" },
+      { label: "MTTD", value: `${(m.mean_time_to_detection_ms / 1000 || 0).toFixed(2)}s`, sub: "Mean Time to Detection", icon: Clock, colorConfig: { icon: "text-blue-600", iconBg: "bg-blue-50", iconBorder: "border-blue-100", accent: "bg-blue-600" } },
+      { label: "MTTR", value: `${(m.mean_time_to_reconciliation_ms / 1000 || 0).toFixed(2)}s`, sub: "Mean Time to Reconcile", icon: Zap, colorConfig: { icon: "text-indigo-600", iconBg: "bg-indigo-50", iconBorder: "border-indigo-100", accent: "bg-indigo-600" } },
+      { label: "FPR", value: `${(m.false_positive_rate || 0).toFixed(2)}%`, sub: "False Positive Rate", icon: CheckCircle2, colorConfig: { icon: "text-emerald-600", iconBg: "bg-emerald-50", iconBorder: "border-emerald-100", accent: "bg-emerald-600" } },
+      { label: "Localization", value: `${(m.drift_localization_accuracy || 0).toFixed(1)}%`, sub: "Detection Accuracy", icon: AlertTriangle, colorConfig: { icon: "text-amber-600", iconBg: "bg-amber-50", iconBorder: "border-amber-100", accent: "bg-amber-600" } },
+      { label: "Consensus", value: `${(m.consensus_agreement_rate || 0).toFixed(1)}%`, sub: "Agreement Success", icon: Share2, colorConfig: { icon: "text-gray-600", iconBg: "bg-gray-100", iconBorder: "border-gray-200", accent: "bg-gray-600" } },
    ]
 
    const historyData = [
@@ -36,69 +56,73 @@ export function Analytics() {
    ]
 
    const efficiencyData = [
-      { name: "Naive  O(n)", value: m.comparison_naive_vs_merkle?.naive_comparisons_per_cycle || 96, color: "#2d3748" },
-      { name: "Merkle O(log n)", value: m.comparison_naive_vs_merkle?.merkle_avg_comparisons_per_cycle || 24, color: "#00d2ff" },
+      { name: "Naive  O(n)", value: m.comparison_naive_vs_merkle?.naive_comparisons_per_cycle || 96, color: "#9ca3af" },
+      { name: "Merkle O(log n)", value: m.comparison_naive_vs_merkle?.merkle_avg_comparisons_per_cycle || 24, color: "#2563eb" },
    ]
 
    const telemetry = [
-      { label: "Total Cycles", key: "cycles_completed", color: "var(--color-text-primary)" },
-      { label: "Drifts Detected", key: "drifts_detected", color: "var(--color-status-warn)" },
-      { label: "Attacks Neutralized", key: "attacks_detected", color: "var(--color-status-crit)" },
-      { label: "Auto-Remediations", key: "auto_remediations", color: "var(--color-status-ok)" },
-      { label: "Admin Escalations", key: "escalations", color: "var(--color-violet-400)" },
+      { label: "Total Cycles", key: "cycles_completed", color: "text-gray-900" },
+      { label: "Drifts Detected", key: "drifts_detected", color: "text-amber-600" },
+      { label: "Attacks Neutralized", key: "attacks_detected", color: "text-red-500" },
+      { label: "Auto-Remediations", key: "auto_remediations", color: "text-emerald-600" },
+      { label: "Admin Escalations", key: "escalations", color: "text-indigo-500" },
    ]
 
    return (
-      <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+      <div className="flex flex-col gap-6">
 
          {/* Heading */}
          <div>
-            <h1 style={{ fontFamily: "var(--font-sans)", fontSize: "22px", fontWeight: 700, color: "var(--color-text-primary)", letterSpacing: "-0.03em", lineHeight: 1, marginBottom: "6px" }}>
+            <h1 className="text-2xl font-bold tracking-tight text-gray-900 mb-1">
                Performance Analytics
             </h1>
-            <p style={{ ...monoLabel }}>Consensus protocol efficiency and reliability metrics</p>
+            <p className="text-sm font-medium text-gray-500">
+               Consensus protocol efficiency and reliability metrics
+            </p>
          </div>
 
          {/* Stat cards */}
-         <div style={{ display: "flex", flexWrap: "wrap", gap: "12px" }}>
-            {stats.map((s, i) => <StatCard key={i} label={s.label} value={s.value} subtitle={s.sub} icon={s.icon} color={s.color} />)}
+         <div className="flex flex-wrap gap-4">
+            {stats.map((s, i) => <StatCard key={i} label={s.label} value={s.value} subtitle={s.sub} icon={s.icon} colorConfig={s.colorConfig} />)}
          </div>
 
          {/* Charts row */}
-         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
             {/* Drift frequency */}
-            <div className="mg-card" style={{ padding: "20px 24px" }}>
-               <span style={{ ...monoLabel, display: "block", marginBottom: "16px" }}>Drift Frequency Over Time</span>
-               <div style={{ height: 220 }}>
+            <div className="card p-6 min-h-[300px] flex flex-col">
+               <div className="mb-4">
+                  <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Drift Frequency Over Time</span>
+               </div>
+               <div className="flex-1 w-full min-h-[200px]">
                   <ResponsiveContainer width="100%" height="100%">
-                     <LineChart data={historyData}>
-                        <CartesianGrid strokeDasharray="2 4" stroke="rgba(255,255,255,0.04)" vertical={false} />
-                        <XAxis dataKey="time" stroke="var(--color-text-dim)" fontSize={10} axisLine={false} tickLine={false} fontFamily="'Geist Mono', monospace" />
-                        <YAxis stroke="var(--color-text-dim)" fontSize={10} axisLine={false} tickLine={false} fontFamily="'Geist Mono', monospace" />
-                        <Tooltip {...tooltipStyle} />
-                        <Line type="monotone" dataKey="drifts" stroke="var(--color-cyan-500)" strokeWidth={2} dot={{ fill: "var(--color-cyan-500)", r: 3 }} activeDot={{ r: 5 }} />
+                     <LineChart data={historyData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
+                        <XAxis dataKey="time" stroke="#9ca3af" fontSize={11} axisLine={false} tickLine={false} fontFamily="Geist Mono" />
+                        <YAxis stroke="#9ca3af" fontSize={11} axisLine={false} tickLine={false} fontFamily="Geist Mono" />
+                        <Tooltip content={<CustomTooltip />} />
+                        <Line type="monotone" dataKey="drifts" stroke="#2563eb" strokeWidth={3} dot={{ fill: '#2563eb', strokeWidth: 0, r: 4 }} activeDot={{ r: 6, strokeWidth: 0 }} />
                      </LineChart>
                   </ResponsiveContainer>
                </div>
             </div>
 
             {/* Efficiency bar */}
-            <div className="mg-card" style={{ padding: "20px 24px" }}>
-               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
-                  <span style={{ ...monoLabel }}>Comparison Efficiency</span>
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", fontWeight: 700, padding: "2px 7px", borderRadius: "4px", background: "var(--color-status-ok-dim)", border: "1px solid rgba(16,212,140,0.2)", color: "var(--color-status-ok)" }}>
+            <div className="card p-6 min-h-[300px] flex flex-col">
+               <div className="flex items-center justify-between mb-4">
+                  <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Comparison Efficiency</span>
+                  <span className="px-2 py-0.5 rounded text-[10px] font-bold tracking-widest bg-emerald-50 text-emerald-600 border border-emerald-100">
                      {m.comparison_naive_vs_merkle?.efficiency_gain_percent || 0}% FASTER
                   </span>
                </div>
-               <div style={{ height: 220 }}>
+               <div className="flex-1 w-full min-h-[200px]">
                   <ResponsiveContainer width="100%" height="100%">
-                     <BarChart data={efficiencyData} layout="vertical">
-                        <CartesianGrid strokeDasharray="2 4" stroke="rgba(255,255,255,0.04)" horizontal={false} />
+                     <BarChart data={efficiencyData} layout="vertical" margin={{ top: 5, right: 30, left: 30, bottom: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" horizontal={false} />
                         <XAxis type="number" hide />
-                        <YAxis dataKey="name" type="category" stroke="var(--color-text-dim)" fontSize={10} axisLine={false} tickLine={false} width={110} fontFamily="'Geist Mono', monospace" />
-                        <Tooltip cursor={{ fill: "rgba(255,255,255,0.03)" }} {...tooltipStyle} />
-                        <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={28}>
+                        <YAxis dataKey="name" type="category" stroke="#6b7280" fontSize={11} axisLine={false} tickLine={false} fontFamily="Geist Mono" />
+                        <Tooltip content={<CustomBarTooltip />} cursor={{ fill: '#f9fafb' }} />
+                        <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={32}>
                            {efficiencyData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
                         </Bar>
                      </BarChart>
@@ -108,23 +132,19 @@ export function Analytics() {
          </div>
 
          {/* Bottom row */}
-         <div style={{ display: "grid", gridTemplateColumns: "220px 1fr", gap: "16px" }}>
+         <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
 
             {/* Telemetry */}
-            <div className="mg-card" style={{ padding: "20px 24px" }}>
-               <span style={{ ...monoLabel, display: "block", marginBottom: "16px" }}>Cycle Telemetry</span>
-               <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
+            <div className="card p-5">
+               <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider mb-4 block">Cycle Telemetry</span>
+               <div className="flex flex-col gap-0 font-mono text-xs">
                   {telemetry.map((item, i) => (
                      <div
                         key={i}
-                        style={{
-                           display: "flex", justifyContent: "space-between", alignItems: "center",
-                           padding: "10px 0",
-                           borderBottom: i < telemetry.length - 1 ? "1px solid var(--color-border-subtle)" : "none",
-                        }}
+                        className={`flex justify-between items-center py-2.5 ${i < telemetry.length - 1 ? "border-b border-gray-100" : ""}`}
                      >
-                        <span style={{ fontFamily: "var(--font-sans)", fontSize: "11.5px", color: "var(--color-text-muted)" }}>{item.label}</span>
-                        <span style={{ fontFamily: "var(--font-mono)", fontSize: "13px", fontWeight: 700, color: item.color }}>
+                        <span className="font-sans font-medium text-gray-500">{item.label}</span>
+                        <span className={`font-bold ${item.color}`}>
                            {m.totals?.[item.key] ?? 0}
                         </span>
                      </div>
@@ -133,30 +153,28 @@ export function Analytics() {
             </div>
 
             {/* Latency heatmap */}
-            <div className="mg-card" style={{ padding: "20px 24px" }}>
-               <span style={{ ...monoLabel, display: "block", marginBottom: "16px" }}>Consensus Latency Heatmap</span>
-               <div style={{ display: "grid", gridTemplateColumns: "repeat(8, 1fr)", gap: "5px" }}>
-                  {Array.from({ length: 48 }).map((_, i) => {
+            <div className="card p-6">
+               <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider mb-4 block">Consensus Latency Heatmap</span>
+
+               <div className="grid grid-cols-8 sm:grid-cols-12 md:grid-cols-16 gap-1.5 mb-4">
+                  {Array.from({ length: 96 }).map((_, i) => {
                      const intensity = 0.1 + Math.random() * 0.9
+                     const latency = Math.round(intensity * 490 + 10)
                      return (
                         <div
                            key={i}
-                           title={`${Math.round(intensity * 490 + 10)}ms`}
-                           style={{
-                              aspectRatio: "1", borderRadius: "4px", cursor: "pointer",
-                              background: `rgba(0, 210, 255, ${intensity * 0.9})`,
-                              transition: "transform 0.15s",
-                           }}
-                           onMouseEnter={e => e.currentTarget.style.transform = "scale(1.15)"}
-                           onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
+                           title={`${latency}ms`}
+                           className="aspect-square rounded-sm cursor-pointer hover:scale-110 transition-transform hover:ring-2 hover:ring-blue-300 ring-offset-1"
+                           style={{ backgroundColor: `rgba(59, 130, 246, ${intensity * 0.8 + 0.1})` }}
                         />
                      )
                   })}
                </div>
-               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "12px" }}>
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--color-text-dim)" }}>10ms</span>
-                  <div style={{ flex: 1, height: "2px", margin: "0 12px", borderRadius: "1px", background: "linear-gradient(90deg, rgba(0,210,255,0.1), var(--color-cyan-500))" }} />
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--color-text-dim)" }}>500ms</span>
+
+               <div className="flex justify-between items-center px-1">
+                  <span className="font-mono text-[10px] font-semibold tracking-widest text-gray-400">10ms</span>
+                  <div className="flex-1 h-1 mx-4 rounded-full bg-gradient-to-r from-blue-50 to-blue-600" />
+                  <span className="font-mono text-[10px] font-semibold tracking-widest text-gray-400">500ms</span>
                </div>
             </div>
          </div>

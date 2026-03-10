@@ -21,6 +21,7 @@ export function useWebSocket(onMessage) {
     const host = window.location.host
     const wsUrl = `${protocol}//${host}/api/ws/events`
 
+    console.log("Connecting to WebSocket:", wsUrl)
     ws.current = new WebSocket(wsUrl)
 
     ws.current.onopen = () => {
@@ -53,7 +54,9 @@ export function useWebSocket(onMessage) {
 
     ws.current.onerror = (err) => {
       console.error("WebSocket error", err)
-      ws.current.close()
+      if (ws.current && ws.current.readyState !== WebSocket.CLOSED) {
+        ws.current.close()
+      }
     }
   }, [])
 

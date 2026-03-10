@@ -1,15 +1,31 @@
 import React from "react"
+import { useEvents } from "../context/EventContext"
 
-export function ComplianceDonut({ stats }) {
-  const compliant = stats?.compliant_count || stats?.compliant || 0
-  const drifted = stats?.drifted_count || stats?.drifted || 0
-  const critical = stats?.critical_count || stats?.critical || 0
+export function ComplianceDonut({ stats: propStats, nodes: propNodes }) {
+  const { stats: ctxStats, nodes: ctxNodes } = useEvents()
+
+  const actualStats = propStats || ctxStats
+  const actualNodes = propNodes || ctxNodes || []
+
+  // Compute from nodes if stats missing
+  let compliant = actualStats?.compliant_count || 0
+  let drifted = actualStats?.drifted_count || 0
+  let critical = actualStats?.critical_count || 0
+
+  if (!actualStats?.compliant_count && actualNodes.length > 0) {
+    compliant = actualNodes.filter(n => n.status === 'secure').length
+    drifted = actualNodes.filter(n => n.status === 'drifted' || n.status === 'warning').length
+    critical = actualNodes.filter(n => n.status === 'compromised' || n.status === 'critical').length
+  }
+
   const total = compliant + drifted + critical || 1
 
   const radius = 68
-  const strokeWidth = 16
+  const strokeWidth = 14
   const circumference = 2 * Math.PI * radius
-  const gap = 3
+
+  // No gap for cleaner look
+  const gap = 0
 
   const cPct = (compliant / total) * circumference - gap
   const dPct = (drifted / total) * circumference - gap
@@ -19,74 +35,77 @@ export function ComplianceDonut({ stats }) {
   const dOffset = -(compliant / total) * circumference
   const rOffset = -((compliant + drifted) / total) * circumference
 
-  const compliantPct = Math.round((compliant / total) * 100)
+  const compliantPct = Math.round((compliant / total) * 100) || 0
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: "32px" }}>
+    <div className="flex flex-col items-center gap-6 w-full">
       {/* SVG Donut */}
-      <div style={{ position: "relative", width: 160, height: 160, flexShrink: 0 }}>
-        <svg viewBox="0 0 200 200" style={{ transform: "rotate(-90deg)", width: "100%", height: "100%" }}>
+      <div className="relative w-40 h-40 shrink-0">
+        <svg viewBox="0 0 200 200" className="w-full h-full -rotate-90 drop-shadow-sm">
           {/* Track */}
-          <circle cx="100" cy="100" r={radius} fill="none" stroke="var(--color-bg-elevated)" strokeWidth={strokeWidth} />
+          <circle cx="100" cy="100" r={radius} fill="none" className="stroke-gray-100" strokeWidth={strokeWidth} />
 
           {/* Compliant */}
           <circle cx="100" cy="100" r={radius} fill="none"
-            stroke="var(--color-status-ok)" strokeWidth={strokeWidth}
+            className="stroke-emerald-500 transition-all duration-1000 ease-out" strokeWidth={strokeWidth}
             strokeDasharray={`${Math.max(0, cPct)} ${circumference}`}
             strokeDashoffset={cOffset}
             strokeLinecap="round"
-            style={{ transition: "stroke-dasharray 1s cubic-bezier(.16,1,.3,1)" }}
           />
 
           {/* Drifted */}
           <circle cx="100" cy="100" r={radius} fill="none"
-            stroke="var(--color-status-warn)" strokeWidth={strokeWidth}
+            className="stroke-amber-400 transition-all duration-1000 ease-out" strokeWidth={strokeWidth}
             strokeDasharray={`${Math.max(0, dPct)} ${circumference}`}
             strokeDashoffset={dOffset}
             strokeLinecap="round"
-            style={{ transition: "stroke-dasharray 1s cubic-bezier(.16,1,.3,1)" }}
           />
 
           {/* Critical */}
           <circle cx="100" cy="100" r={radius} fill="none"
-            stroke="var(--color-status-crit)" strokeWidth={strokeWidth}
+            className="stroke-red-500 transition-all duration-1000 ease-out" strokeWidth={strokeWidth}
             strokeDasharray={`${Math.max(0, rPct)} ${circumference}`}
             strokeDashoffset={rOffset}
             strokeLinecap="round"
-            style={{ transition: "stroke-dasharray 1s cubic-bezier(.16,1,.3,1)" }}
           />
         </svg>
 
         {/* Center label */}
-        <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-          <span style={{ fontFamily: "var(--font-mono)", fontSize: "28px", fontWeight: 800, color: "var(--color-text-primary)", letterSpacing: "-0.04em", lineHeight: 1 }}>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className="text-3xl font-bold text-gray-900 tracking-tight leading-none">
             {compliantPct}%
           </span>
-          <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--color-text-muted)", marginTop: "3px" }}>
-            Compliant
+          <span className="text-[10px] font-semibold tracking-widest uppercase text-gray-400 mt-1">
+            Secure
           </span>
         </div>
       </div>
 
       {/* Legend */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-        {[
-          { color: "var(--color-status-ok)", label: "Compliant", count: compliant },
-          { color: "var(--color-status-warn)", label: "Drifted", count: drifted },
-          { color: "var(--color-status-crit)", label: "Critical", count: critical },
-        ].map(({ color, label, count }) => (
-          <div key={label} style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <div style={{ width: 8, height: 8, borderRadius: "3px", background: color, flexShrink: 0, boxShadow: `0 0 6px ${color}80` }} />
-            <div style={{ display: "flex", flexDirection: "column", gap: "1px" }}>
-              <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--color-text-muted)" }}>
-                {label}
-              </span>
-              <span style={{ fontFamily: "var(--font-mono)", fontSize: "15px", fontWeight: 700, color: "var(--color-text-primary)", lineHeight: 1 }}>
-                {count} <span style={{ fontSize: "10px", fontWeight: 500, color: "var(--color-text-muted)" }}>nodes</span>
-              </span>
-            </div>
+      <div className="flex justify-center flex-wrap gap-x-6 gap-y-3 w-full px-2">
+        <div className="flex flex-col items-center gap-1">
+          <div className="flex items-center gap-1.5">
+            <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-sm" />
+            <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Secure</span>
           </div>
-        ))}
+          <span className="text-sm font-semibold text-gray-900">{compliant}</span>
+        </div>
+
+        <div className="flex flex-col items-center gap-1">
+          <div className="flex items-center gap-1.5">
+            <div className="w-2 h-2 rounded-full bg-amber-400 shadow-sm" />
+            <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Drifted</span>
+          </div>
+          <span className="text-sm font-semibold text-gray-900">{drifted}</span>
+        </div>
+
+        <div className="flex flex-col items-center gap-1">
+          <div className="flex items-center gap-1.5">
+            <div className="w-2 h-2 rounded-full bg-red-500 shadow-sm" />
+            <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Critical</span>
+          </div>
+          <span className="text-sm font-semibold text-gray-900">{critical}</span>
+        </div>
       </div>
     </div>
   )
