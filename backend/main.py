@@ -166,6 +166,8 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:5288",
         "http://127.0.0.1:5288",
+        "http://frontend:5288",  # Docker service-to-service
+        "http://0.0.0.0:5288",   # Docker host binding
     ],
     allow_credentials=True,
     allow_methods=["*"],
